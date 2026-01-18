@@ -66,6 +66,12 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
         return std::make_unique<VarExpr>(tokens[position - 1].lexeme);
     } else if (match(TokenKind::String)) {
         return std::make_unique<StringExpr>(tokens[position - 1].lexeme);
+    } else if (match(TokenKind::LParen)) {
+        auto expr = parseExpr();
+        if (!match(TokenKind::RParen)) {
+            throw errorExpectedTok("')' after expression");
+        }
+        return expr;
     }
 
     throw ParseError(std::format("Expected atomic expression, but found '{}'", tokenKindToStr(tokens[position].kind)));

@@ -1,9 +1,6 @@
 #include <map>
-#include <stdexcept>
-#include <format>
 
 #include "lexer.h"
-#include "ast.h"
 
 std::map<std::string, TokenKind> keywordMap = {
     {"local", TokenKind::Local},
