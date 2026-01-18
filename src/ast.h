@@ -7,7 +7,7 @@
 #include "lexer.h"
 #include "type.h"
 
-struct Ast {~Ast() = default; };
+struct Ast {virtual ~Ast() = default; };
 
 struct Stmt: Ast {};
 
@@ -28,6 +28,15 @@ struct NumberExpr: Expr {
 struct VarExpr: Expr {
     VarExpr(std::string n): name(std::move(n)) {}
     std::string name;
+};
+
+struct UnaryOpExpr: Expr {
+    UnaryOpExpr(
+        TokenKind o,
+        std::unique_ptr<Expr> r
+    ) : op(o), right(std::move(r)) {}
+    TokenKind op;
+    std::unique_ptr<Expr> right;
 };
 
 struct BinOpExpr: Expr {

@@ -1,3 +1,7 @@
+// Recursive descent parser
+// Pratt parsing for expressions (source: https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
+
+#include <cassert>
 #include <format>
 #include <vector>
 #include "parser.h"
@@ -59,6 +63,25 @@ std::pair<int, int> Parser::opPrecedence(TokenKind kind) const {
     }
 }
 
+std::optional<int> Parser::prefixPrecedence(TokenKind kind) const {
+    switch (kind) {
+        case TokenKind::Minus:
+        case TokenKind::Not:
+            return 70;
+        default:
+            return std::nullopt;
+    }
+}
+
+std::optional<int> Parser::postfixPrecedence(TokenKind kind) const {
+    switch (kind) {
+        case TokenKind::LParen:
+            return 80; // function call
+        default:
+            return std::nullopt;
+    }
+}
+
 std::unique_ptr<Expr> Parser::parseAtomExpr() {
     if (match(TokenKind::Number)) {
         return std::make_unique<NumberExpr>(std::stod(tokens[position - 1].lexeme));
@@ -79,19 +102,64 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
 
 std::unique_ptr<Expr> binaryExpr(std::unique_ptr<Expr> lhs, TokenKind op, std::unique_ptr<Expr> rhs) {
     if (op == TokenKind::MemberAccess) {
-
+        assert("not implemented");
     } else if (op == TokenKind::MethodAccess) {
-
+        assert("not implemented");
     }
     return std::make_unique<BinOpExpr>(std::move(lhs), op, std::move(rhs));
 }
 
+std::unique_ptr<Expr> unaryExpr(TokenKind op, std::unique_ptr<Expr> rhs) {
+    return std::make_unique<UnaryOpExpr>(op, std::move(rhs));
+}
+
+std::unique_ptr<Expr> Parser::parsePostfixExpr(std::unique_ptr<Expr> lhs, TokenKind op) {
+    // funcall
+    if (match(TokenKind::LParen)) {
+        std::vector<std::unique_ptr<Expr>> args;
+        while (true) {
+            if (peek().kind == TokenKind::RParen) {
+                break;
+            }
+
+            args.emplace_back(parseExpr());
+            if (!match(TokenKind::Comma)) {
+                break;
+            }
+        };
+
+        if (!match(TokenKind::RParen)) {
+            throw errorExpectedTok("')' after function call arguments");
+        }
+        return std::make_unique<FunCallExpr>(std::move(lhs), std::move(args));
+    } else {
+        throw errorExpectedTok("postfix operator");
+    }
+}
+
 // Pratt parser
 std::unique_ptr<Expr> Parser::parseExpr(int prevPrec) {
-    auto lhs = parseAtomExpr();
+    auto prefixTok = peek();
+    auto prefixPrecOpt = prefixPrecedence(prefixTok.kind);
+    
+    std::unique_ptr<Expr> lhs;
+    if (prefixPrecOpt) { // We have a prefix operator
+        match(prefixTok.kind);
+        auto rhs = parseExpr(*prefixPrecOpt);
+        lhs = unaryExpr(prefixTok.kind, std::move(rhs));
+    } else {
+        lhs = parseAtomExpr();
+    }
 
     while (true) {
         auto currentToken = peek();
+
+        auto postfixPrecOpt = postfixPrecedence(currentToken.kind);
+        if (postfixPrecOpt) {
+            lhs = parsePostfixExpr(std::move(lhs), currentToken.kind);
+            continue;
+        }
+
         auto [lprec, rprec] = opPrecedence(currentToken.kind);
         if (lprec < prevPrec) {
             break;

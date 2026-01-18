@@ -31,7 +31,8 @@ inline const char* tokenKindToStr(TokenKind kind) {
         "Identifier",
         "Number",
         "String",
-"Local", "Function", "End", "Return", "If", "Then", "Else", "ElseIf",
+
+        "Local", "Function", "End", "Return", "If", "Then", "Else", "ElseIf",
 
         "LParen", "RParen", "LBrace", "RBrace",
         "Colon", "Comma", "Assign",

@@ -1,6 +1,7 @@
 CXX=g++
 LD=g++
-CXXFLAGS=-Wall -pedantic -std=c++23
+CXXFLAGS=-Wall -pedantic -std=c++23 -fsanitize=address -g
+CXXLINKERFLAGS=-fsanitize=address
 CXXTESTFLAGS=-lCatch2Main -lCatch2
 
 SRC_DIR=src
@@ -21,7 +22,7 @@ all: $(BIN)
 
 # linking
 $(BIN): $(OBJECT_FILES)
-	$(LD) $(OBJECT_FILES) -o $@
+	$(LD) $(OBJECT_FILES) -o $@ $(CXXLINKERFLAGS)
 
 # compile
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp | $(OBJ_DIR)

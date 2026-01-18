@@ -35,11 +35,18 @@ private:
     }
 
     std::pair<int, int> opPrecedence(TokenKind kind) const;
+    /// Returns the precedence of a prefix operator.
+    /// if the token is not a prefix operator, returns std::nullopt.
+    std::optional<int> prefixPrecedence(TokenKind kind) const;
+    /// Returns the precedence of a postfix operator.
+    /// if the token is not a postfix operator, returns std::nullopt.
+    std::optional<int> postfixPrecedence(TokenKind kind) const;
 
     Program parseTopLevel();
 
     std::unique_ptr<Expr> parseAtomExpr();
     std::unique_ptr<Expr> parseExpr(int prevPrec = 0);
+    std::unique_ptr<Expr> parsePostfixExpr(std::unique_ptr<Expr> left, TokenKind op);
 
     std::unique_ptr<Stmt> parseStmt();
     std::unique_ptr<ReturnStmt> parseReturnStmt();

@@ -79,6 +79,18 @@ TEST_CASE("binary expressions parsing") {
     REQUIRE_NOTHROW(parse("local result = a == b"));
 }
 
+TEST_CASE("unary expressions parsing") {
+    REQUIRE_NOTHROW(parse("local result = -x"));
+    REQUIRE_NOTHROW(parse("local result = not flag"));
+}
+
+TEST_CASE("parse function calls") {
+    REQUIRE_NOTHROW(parse("local result = foo()"));
+    REQUIRE_NOTHROW(parse("local result = foo(1)"));
+    REQUIRE_NOTHROW(parse("local result = foo(1, 2)"));
+    REQUIRE_NOTHROW(parse("local result = (foo)(x, y)"));
+}
+
 TEST_CASE("parse member access expressions", "[!mayfail]") {
     REQUIRE_NOTHROW(parse("local value = obj.field"));
     REQUIRE_NOTHROW(parse("local value = obj.nested.field") );

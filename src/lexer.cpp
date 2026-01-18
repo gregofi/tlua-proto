@@ -11,6 +11,10 @@ std::map<std::string, TokenKind> keywordMap = {
     {"then", TokenKind::Then},
     {"else", TokenKind::Else},
     {"elseif", TokenKind::ElseIf},
+    // logical ops
+    {"not", TokenKind::Not},
+    {"and", TokenKind::And},
+    {"or", TokenKind::Or},
 };
 
 Token Lexer::getNextToken() {
