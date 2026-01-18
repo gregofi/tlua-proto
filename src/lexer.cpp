@@ -58,7 +58,14 @@ Token Lexer::getNextToken() {
             case '-': advance(); return tok(TokenKind::Minus, "-");
             case '*': advance(); return tok(TokenKind::Star, "*");
             case '/': advance(); return tok(TokenKind::Slash, "/");
-            case '=': advance(); return tok(TokenKind::Assign, "=");
+            case '=': {
+                advance();
+                if (peek() == '=') {
+                    advance();
+                    return tok(TokenKind::Equal, "==");
+                }
+                return tok(TokenKind::Assign, "=");
+            }
         }
     }
 
