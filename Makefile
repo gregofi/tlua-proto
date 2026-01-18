@@ -48,6 +48,7 @@ $(TEST_BUILD_DIR):
 lexer_test_OBJS=$(OBJ_DIR)/lexer.o
 parser_test_OBJS=$(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o
 
+.SECONDEXPANSION:
 $(TEST_BUILD_DIR)/%: $(TEST_DIR)/%.cpp $$(%_OBJS) | $(TEST_BUILD_DIR)
 	$(CXX) $(CXXFLAGS) $^ $(CXXTESTFLAGS) -o $@
 
