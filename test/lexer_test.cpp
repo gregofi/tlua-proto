@@ -1,5 +1,5 @@
-#include <catch2/catch_test_macros.hpp>
 #include "../src/lexer.h"
+#include <catch2/catch_test_macros.hpp>
 
 TEST_CASE("should be able to tokenize simple source") {
     std::string source = "local x = 10";

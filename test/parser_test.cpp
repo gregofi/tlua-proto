@@ -1,7 +1,7 @@
-#include <catch2/catch_test_macros.hpp>
-#include <sstream>
 #include "../src/lexer.h"
 #include "../src/parser.h"
+#include <catch2/catch_test_macros.hpp>
+#include <sstream>
 
 const Program parse(const std::string& source) {
     auto tokens = Lexer::tokenize(source);
@@ -17,7 +17,8 @@ std::string normalize(const std::string& str) {
         auto start = line.find_first_not_of(" \t\r\n");
         if (start != std::string::npos) {
             auto end = line.find_last_not_of(" \t\r\n");
-            if (!result.empty()) result += " ";
+            if (!result.empty())
+                result += " ";
             result += line.substr(start, end - start + 1);
         }
     }
@@ -30,46 +31,38 @@ TEST_CASE("parse one declaration program") {
 }
 
 TEST_CASE("parse multiple declarations") {
-    REQUIRE_NOTHROW(parse(
-        "local x = 10\n"
-        "function add(a, b) return a end\n"
-    ));
+    REQUIRE_NOTHROW(parse("local x = 10\n"
+                          "function add(a, b) return a end\n"));
 }
 
 TEST_CASE("parse if statements") {
-    REQUIRE_NOTHROW(parse(
-        "if x then\n"
-        "  return 1\n"
-        "else\n"
-        "  return 0\n"
-        "end\n"
-    ));
+    REQUIRE_NOTHROW(parse("if x then\n"
+                          "  return 1\n"
+                          "else\n"
+                          "  return 0\n"
+                          "end\n"));
 }
 
 TEST_CASE("parse nested if statements") {
-    REQUIRE_NOTHROW(parse(
-        "if x then\n"
-        "  if y then\n"
-        "    return 1\n"
-        "  else\n"
-        "    return 2\n"
-        "  end\n"
-        "else\n"
-        "  return 0\n"
-        "end\n"
-    ));
+    REQUIRE_NOTHROW(parse("if x then\n"
+                          "  if y then\n"
+                          "    return 1\n"
+                          "  else\n"
+                          "    return 2\n"
+                          "  end\n"
+                          "else\n"
+                          "  return 0\n"
+                          "end\n"));
 }
 
 TEST_CASE("parse if-elseif-else statements") {
-    auto prog = parse(
-        "if x == 1 then\n"
-        "  return 1\n"
-        "elseif x == 2 then\n"
-        "  return 2\n"
-        "else\n"
-        "  return 0\n"
-        "end\n"
-    );
+    auto prog = parse("if x == 1 then\n"
+                      "  return 1\n"
+                      "elseif x == 2 then\n"
+                      "  return 2\n"
+                      "else\n"
+                      "  return 0\n"
+                      "end\n");
     auto expected = R"(
 (if
     (Equal (var x) (number 1))
@@ -93,25 +86,19 @@ TEST_CASE("throw error on invalid syntax") {
 }
 
 TEST_CASE("parse return statements with multiple values") {
-    REQUIRE_NOTHROW(parse(
-        "function foo()\n"
-        "  return 1, 2, 3\n"
-        "end\n"
-    ));
+    REQUIRE_NOTHROW(parse("function foo()\n"
+                          "  return 1, 2, 3\n"
+                          "end\n"));
 }
 
 // TODO
 TEST_CASE("parse function declarations with dot and colon", "[!mayfail]") {
-    REQUIRE_NOTHROW(parse(
-        "function obj:method(a)\n"
-        "  return a\n"
-        "end\n"
-    ));
-    REQUIRE_NOTHROW(parse(
-        "function obj.method(a)\n"
-        "  return a\n"
-        "end\n"
-    ));
+    REQUIRE_NOTHROW(parse("function obj:method(a)\n"
+                          "  return a\n"
+                          "end\n"));
+    REQUIRE_NOTHROW(parse("function obj.method(a)\n"
+                          "  return a\n"
+                          "end\n"));
 }
 
 TEST_CASE("binary expressions parsing") {
@@ -140,11 +127,11 @@ TEST_CASE("parse function calls as statements") {
 
 TEST_CASE("parse member access expressions", "[!mayfail]") {
     REQUIRE_NOTHROW(parse("local value = obj.field"));
-    REQUIRE_NOTHROW(parse("local value = obj.nested.field") );
+    REQUIRE_NOTHROW(parse("local value = obj.nested.field"));
     REQUIRE_NOTHROW(parse("local value = obj:method()"));
     REQUIRE_NOTHROW(parse("local value = obj.method()"));
-    REQUIRE_NOTHROW(parse("local value = obj:nested:method()") );
-    REQUIRE_NOTHROW(parse("local value = foo().bar + 1") );
+    REQUIRE_NOTHROW(parse("local value = obj:nested:method()"));
+    REQUIRE_NOTHROW(parse("local value = foo().bar + 1"));
 }
 
 TEST_CASE("parse fibonacci program") {

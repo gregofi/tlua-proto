@@ -56,3 +56,7 @@ $(TEST_BUILD_DIR)/%: $(TEST_DIR)/%.cpp $$(%_OBJS) | $(TEST_BUILD_DIR)
 .PHONY: test
 test: $(TEST_BINS)
 	@for t in $(TEST_BINS); do $$t; done
+
+.PHONY: format
+format:
+	clang-format -i $(SRC_DIR)/*.cpp $(SRC_DIR)/*.h $(TEST_DIR)/*.cpp

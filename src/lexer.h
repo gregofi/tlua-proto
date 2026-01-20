@@ -9,42 +9,54 @@ enum class TokenKind {
     String,
 
     // keywords
-    Local, Function, End, Return, If, Then, Else, ElseIf,
+    Local,
+    Function,
+    End,
+    Return,
+    If,
+    Then,
+    Else,
+    ElseIf,
 
     // symbols
-    LParen, RParen, LBrace, RBrace,
-    Colon, Comma, Assign,
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+    Colon,
+    Comma,
+    Assign,
 
     // operators
-    Plus, Minus, Star, Slash,
-    Equal, EqualEqual, NotEqual, Less, Greater,
-    LessEqual, GreaterEqual,
-    And, Or, Not,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Equal,
+    EqualEqual,
+    NotEqual,
+    Less,
+    Greater,
+    LessEqual,
+    GreaterEqual,
+    And,
+    Or,
+    Not,
     Concat,
-    MemberAccess, MethodAccess,
+    MemberAccess,
+    MethodAccess,
 
     Eof,
 };
 
 inline const char* tokenKindToStr(TokenKind kind) {
     static const char* tokenKindToString[] = {
-        "Identifier",
-        "Number",
-        "String",
-
-        "Local", "Function", "End", "Return", "If", "Then", "Else", "ElseIf",
-
-        "LParen", "RParen", "LBrace", "RBrace",
-        "Colon", "Comma", "Assign",
-
-        "Plus", "Minus", "Star",  "Slash",
-        "Equal", "EqualEqual", "NotEqual", "Less", "Greater",
-        "LessEqual", "GreaterEqual",
-        "And", "Or", "Not",
-        "Concat",
-        "MemberAccess", "MethodAccess",
-
-        "Eof",
+        "Identifier", "Number", "String",  "Local",        "Function",     "End",
+        "Return",     "If",     "Then",    "Else",         "ElseIf",       "LParen",
+        "RParen",     "LBrace", "RBrace",  "Colon",        "Comma",        "Assign",
+        "Plus",       "Minus",  "Star",    "Slash",        "Equal",        "EqualEqual",
+        "NotEqual",   "Less",   "Greater", "LessEqual",    "GreaterEqual", "And",
+        "Or",         "Not",    "Concat",  "MemberAccess", "MethodAccess", "Eof",
     };
     return tokenKindToString[static_cast<int>(kind)];
 }
@@ -73,9 +85,8 @@ struct Token {
 };
 
 class Lexer {
-public:
-    Lexer(const std::string& source)
-        : source(source), position(0), line(1), column(1) {}
+  public:
+    Lexer(const std::string& source) : source(source), position(0), line(1), column(1) {}
     Token getNextToken();
 
     static std::vector<Token> tokenize(const std::string& source) {
@@ -88,14 +99,17 @@ public:
         } while (token.kind != TokenKind::Eof);
         return tokens;
     }
-private:
+
+  private:
     char peek() const {
-        if (position >= source.size()) return '\0';
+        if (position >= source.size())
+            return '\0';
         return source[position];
     }
 
     char advance() {
-        if (position >= source.size()) return '\0';
+        if (position >= source.size())
+            return '\0';
         char current = source[position++];
         if (current == '\n') {
             line++;

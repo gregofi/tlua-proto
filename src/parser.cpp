@@ -1,16 +1,15 @@
 // Recursive descent parser
-// Pratt parsing for expressions (source: https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
+// Pratt parsing for expressions (source:
+// https://matklad.github.io/2020/04/13/simple-but-powerful-pratt-parsing.html)
 
+#include "parser.h"
+#include "ast.h"
+#include "lexer.h"
 #include <cassert>
 #include <format>
 #include <vector>
-#include "parser.h"
-#include "lexer.h"
-#include "ast.h"
 
-Program Parser::parse() {
-    return parseTopLevel();
-}
+Program Parser::parse() { return parseTopLevel(); }
 
 bool Parser::match(TokenKind kind) {
     if (position < tokens.size() && tokens[position].kind == kind) {
@@ -31,54 +30,54 @@ Program Parser::parseTopLevel() {
     Program program;
     while (position < tokens.size() && tokens[position].kind != TokenKind::Eof) {
         program.statements.emplace_back(parseStmt());
-    } 
+    }
     return program;
 }
 
 std::pair<int, int> Parser::opPrecedence(TokenKind kind) const {
     switch (kind) {
-        case TokenKind::And:
-        case TokenKind::Or:
-            return {10, 11};
-        case TokenKind::Equal:
-        case TokenKind::NotEqual:
-        case TokenKind::Less:
-        case TokenKind::Greater:
-        case TokenKind::LessEqual:
-        case TokenKind::GreaterEqual:
-            return {20, 21};
-        case TokenKind::Plus:
-        case TokenKind::Minus:
-            return {30, 31};
-        case TokenKind::Star:
-        case TokenKind::Slash:
-            return {40, 41};
-        case TokenKind::Concat:
-            return {50, 51};
-        case TokenKind::MemberAccess:
-        case TokenKind::MethodAccess:
-            return {60, 61};
-        default:
-            return {-1, -1}; // causes the parser to stop parsing further
+    case TokenKind::And:
+    case TokenKind::Or:
+        return {10, 11};
+    case TokenKind::Equal:
+    case TokenKind::NotEqual:
+    case TokenKind::Less:
+    case TokenKind::Greater:
+    case TokenKind::LessEqual:
+    case TokenKind::GreaterEqual:
+        return {20, 21};
+    case TokenKind::Plus:
+    case TokenKind::Minus:
+        return {30, 31};
+    case TokenKind::Star:
+    case TokenKind::Slash:
+        return {40, 41};
+    case TokenKind::Concat:
+        return {50, 51};
+    case TokenKind::MemberAccess:
+    case TokenKind::MethodAccess:
+        return {60, 61};
+    default:
+        return {-1, -1}; // causes the parser to stop parsing further
     }
 }
 
 std::optional<int> Parser::prefixPrecedence(TokenKind kind) const {
     switch (kind) {
-        case TokenKind::Minus:
-        case TokenKind::Not:
-            return 70;
-        default:
-            return std::nullopt;
+    case TokenKind::Minus:
+    case TokenKind::Not:
+        return 70;
+    default:
+        return std::nullopt;
     }
 }
 
 std::optional<int> Parser::postfixPrecedence(TokenKind kind) const {
     switch (kind) {
-        case TokenKind::LParen:
-            return 80; // function call
-        default:
-            return std::nullopt;
+    case TokenKind::LParen:
+        return 80; // function call
+    default:
+        return std::nullopt;
     }
 }
 
@@ -97,10 +96,12 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
         return expr;
     }
 
-    throw ParseError(std::format("Expected atomic expression, but found '{}'", tokenKindToStr(tokens[position].kind)));
+    throw ParseError(std::format("Expected atomic expression, but found '{}'",
+                                 tokenKindToStr(tokens[position].kind)));
 }
 
-std::unique_ptr<Expr> binaryExpr(std::unique_ptr<Expr> lhs, TokenKind op, std::unique_ptr<Expr> rhs) {
+std::unique_ptr<Expr> binaryExpr(std::unique_ptr<Expr> lhs, TokenKind op,
+                                 std::unique_ptr<Expr> rhs) {
     if (op == TokenKind::MemberAccess) {
         assert("not implemented");
     } else if (op == TokenKind::MethodAccess) {
@@ -141,7 +142,7 @@ std::unique_ptr<Expr> Parser::parsePostfixExpr(std::unique_ptr<Expr> lhs, TokenK
 std::unique_ptr<Expr> Parser::parseExpr(int prevPrec) {
     auto prefixTok = peek();
     auto prefixPrecOpt = prefixPrecedence(prefixTok.kind);
-    
+
     std::unique_ptr<Expr> lhs;
     if (prefixPrecOpt) { // We have a prefix operator
         match(prefixTok.kind);
@@ -178,7 +179,7 @@ std::unique_ptr<Stmt> Parser::parseStmt() {
         return parseDecl();
     } else if (match(TokenKind::Return)) {
         return parseReturnStmt();
-    // Function call
+        // Function call
     } else if (peek().kind == TokenKind::Identifier) {
         auto expr = parseExpr();
         if (auto funCall = dynamic_cast<FunCallExpr*>(expr.get())) {
@@ -187,7 +188,8 @@ std::unique_ptr<Stmt> Parser::parseStmt() {
         } else {
             throw errorExpectedTok("function call statement");
         }
-    } if (match(TokenKind::If)) {
+    }
+    if (match(TokenKind::If)) {
         return parseIfStmt();
     }
 
@@ -224,11 +226,7 @@ std::unique_ptr<IfStmt> Parser::parseIfStmt() {
         }
     }
 
-    return std::make_unique<IfStmt>(
-        std::move(condition),
-        std::move(thenBody),
-        std::move(elseBody)
-    );
+    return std::make_unique<IfStmt>(std::move(condition), std::move(thenBody), std::move(elseBody));
 }
 
 std::unique_ptr<VarDecl> Parser::parseVarDecl() {
@@ -241,10 +239,7 @@ std::unique_ptr<VarDecl> Parser::parseVarDecl() {
         throw errorExpectedTok("'=' after variable name");
     }
     auto initExpr = parseExpr();
-    return std::make_unique<VarDecl>(
-        varName,
-        std::move(initExpr)
-    );
+    return std::make_unique<VarDecl>(varName, std::move(initExpr));
 }
 
 std::unique_ptr<Decl> Parser::parseDecl() {
@@ -288,12 +283,8 @@ std::unique_ptr<FunDecl> Parser::parseFunDecl(bool local) {
         body.emplace_back(parseStmt());
     }
 
-    return std::make_unique<FunDecl>(
-        functionName,
-        local,
-        std::nullopt, // TODO
-        false, // TODO
-        std::move(parameters),
-        std::move(body)
-    );
+    return std::make_unique<FunDecl>(functionName, local,
+                                     std::nullopt, // TODO
+                                     false,        // TODO
+                                     std::move(parameters), std::move(body));
 }

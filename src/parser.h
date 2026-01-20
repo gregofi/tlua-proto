@@ -1,26 +1,25 @@
 #pragma once
-#include <format>
-#include <vector>
-#include <memory>
-#include "lexer.h"
 #include "ast.h"
+#include "lexer.h"
+#include <format>
+#include <memory>
+#include <vector>
 
 struct Program {
     std::vector<std::unique_ptr<Stmt>> statements;
 };
 
-class ParseError: public std::runtime_error {
-    public:
-    ParseError(const std::string& message)
-        : std::runtime_error(message) {}
+class ParseError : public std::runtime_error {
+  public:
+    ParseError(const std::string& message) : std::runtime_error(message) {}
 };
 
 class Parser {
-public:
-    Parser(const std::vector<Token>& tokens)
-        : tokens(tokens), position(0) {}
+  public:
+    Parser(const std::vector<Token>& tokens) : tokens(tokens), position(0) {}
     Program parse();
-private:
+
+  private:
     /// If the current token matches the given kind, consumes it and returns true.
     bool match(TokenKind kind);
     /// Consumes current and returns the next token, advancing the position.
@@ -28,11 +27,9 @@ private:
     Token peek() const;
     ParseError errorExpectedTok(const std::string& expected) const {
         return ParseError(std::format("Expected {}, but found '{}' ({}) at line {}, column {}",
-            expected,
-            tokens[position].lexeme,
-            tokenKindToStr(tokens[position].kind),
-            tokens[position].line,
-            tokens[position].column));
+                                      expected, tokens[position].lexeme,
+                                      tokenKindToStr(tokens[position].kind), tokens[position].line,
+                                      tokens[position].column));
     }
 
     std::pair<int, int> opPrecedence(TokenKind kind) const;

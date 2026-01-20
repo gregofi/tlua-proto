@@ -18,7 +18,7 @@ std::map<std::string, TokenKind> keywordMap = {
 };
 
 Token Lexer::getNextToken() {
-    char c = peek(); 
+    char c = peek();
     std::string lexeme;
 
     if (c == '\0') {
@@ -52,40 +52,60 @@ Token Lexer::getNextToken() {
     } else {
         // Handle single-character tokens
         switch (c) {
-            case '(': advance(); return tok(TokenKind::LParen, "(");
-            case ')': advance(); return tok(TokenKind::RParen, ")");
-            case '{': advance(); return tok(TokenKind::LBrace, "{");
-            case '}': advance(); return tok(TokenKind::RBrace, "}");
-            case ':': advance(); return tok(TokenKind::Colon, ":");
-            case ',': advance(); return tok(TokenKind::Comma, ",");
-            case '+': advance(); return tok(TokenKind::Plus, "+");
-            case '-': advance(); return tok(TokenKind::Minus, "-");
-            case '*': advance(); return tok(TokenKind::Star, "*");
-            case '/': advance(); return tok(TokenKind::Slash, "/");
-            case '<': {
+        case '(':
+            advance();
+            return tok(TokenKind::LParen, "(");
+        case ')':
+            advance();
+            return tok(TokenKind::RParen, ")");
+        case '{':
+            advance();
+            return tok(TokenKind::LBrace, "{");
+        case '}':
+            advance();
+            return tok(TokenKind::RBrace, "}");
+        case ':':
+            advance();
+            return tok(TokenKind::Colon, ":");
+        case ',':
+            advance();
+            return tok(TokenKind::Comma, ",");
+        case '+':
+            advance();
+            return tok(TokenKind::Plus, "+");
+        case '-':
+            advance();
+            return tok(TokenKind::Minus, "-");
+        case '*':
+            advance();
+            return tok(TokenKind::Star, "*");
+        case '/':
+            advance();
+            return tok(TokenKind::Slash, "/");
+        case '<': {
+            advance();
+            if (peek() == '=') {
                 advance();
-                if (peek() == '=') {
-                    advance();
-                    return tok(TokenKind::LessEqual, "<=");
-                }
-                return tok(TokenKind::Less, "<");
+                return tok(TokenKind::LessEqual, "<=");
             }
-            case '>': {
+            return tok(TokenKind::Less, "<");
+        }
+        case '>': {
+            advance();
+            if (peek() == '=') {
                 advance();
-                if (peek() == '=') {
-                    advance();
-                    return tok(TokenKind::GreaterEqual, ">=");
-                }
-                return tok(TokenKind::Greater, ">");
+                return tok(TokenKind::GreaterEqual, ">=");
             }
-            case '=': {
+            return tok(TokenKind::Greater, ">");
+        }
+        case '=': {
+            advance();
+            if (peek() == '=') {
                 advance();
-                if (peek() == '=') {
-                    advance();
-                    return tok(TokenKind::Equal, "==");
-                }
-                return tok(TokenKind::Assign, "=");
+                return tok(TokenKind::Equal, "==");
             }
+            return tok(TokenKind::Assign, "=");
+        }
         }
     }
 
