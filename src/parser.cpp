@@ -102,11 +102,6 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
 
 std::unique_ptr<Expr> binaryExpr(std::unique_ptr<Expr> lhs, TokenKind op,
                                  std::unique_ptr<Expr> rhs) {
-    if (op == TokenKind::MemberAccess) {
-        assert("not implemented");
-    } else if (op == TokenKind::MethodAccess) {
-        assert("not implemented");
-    }
     return std::make_unique<BinOpExpr>(std::move(lhs), op, std::move(rhs));
 }
 

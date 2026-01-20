@@ -66,7 +66,7 @@ Token Lexer::getNextToken() {
             return tok(TokenKind::RBrace, "}");
         case ':':
             advance();
-            return tok(TokenKind::Colon, ":");
+            return tok(TokenKind::MethodAccess, ":");
         case ',':
             advance();
             return tok(TokenKind::Comma, ",");
@@ -82,6 +82,9 @@ Token Lexer::getNextToken() {
         case '/':
             advance();
             return tok(TokenKind::Slash, "/");
+        case '.':
+            advance();
+            return tok(TokenKind::MemberAccess, ".");
         case '<': {
             advance();
             if (peek() == '=') {

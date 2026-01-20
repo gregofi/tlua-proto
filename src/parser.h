@@ -45,6 +45,7 @@ class Parser {
     std::unique_ptr<Expr> parseAtomExpr();
     std::unique_ptr<Expr> parseExpr(int prevPrec = 0);
     std::unique_ptr<Expr> parsePostfixExpr(std::unique_ptr<Expr> left, TokenKind op);
+    std::optional<std::unique_ptr<Expr>> parseMemberAccess(std::unique_ptr<Expr> object);
 
     std::unique_ptr<Stmt> parseStmt();
     std::unique_ptr<ReturnStmt> parseReturnStmt();

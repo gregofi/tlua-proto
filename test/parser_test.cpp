@@ -22,6 +22,7 @@ std::string normalize(const std::string& str) {
             result += line.substr(start, end - start + 1);
         }
     }
+
     return result;
 }
 
@@ -71,12 +72,9 @@ TEST_CASE("parse if-elseif-else statements") {
         (if
             (Equal (var x) (number 2))
             (then (return (number 2)))
-            (else (return (number 0)))
-        )
-    )
-)
+            (else (return (number 0))))))
 )";
-    REQUIRE(prog.statements.at(0)->toSExpr() == normalize(expected));
+    REQUIRE(normalize(prog.statements.at(0)->toSExpr()) == normalize(expected));
 }
 
 TEST_CASE("throw error on invalid syntax") {
@@ -125,7 +123,7 @@ TEST_CASE("parse function calls as statements") {
     REQUIRE_NOTHROW(parse("foo(1, 2)"));
 }
 
-TEST_CASE("parse member access expressions", "[!mayfail]") {
+TEST_CASE("parse member access expressions") {
     REQUIRE_NOTHROW(parse("local value = obj.field"));
     REQUIRE_NOTHROW(parse("local value = obj.nested.field"));
     REQUIRE_NOTHROW(parse("local value = obj:method()"));
@@ -149,7 +147,7 @@ end
 local result = fib(10)
 print(result)
 )";
-    auto expected = normalize(R"(
+    auto expected = R"(
 (fun global fib (n)
     (if (Equal (var n) (number 0))
         (then (return (number 0)))
@@ -161,12 +159,12 @@ print(result)
                                 (call (var fib) (Minus (var n) (number 2))))))))))
 (var-decl  (call (var fib) (number 10)))
 (call (var print) (var result))
-)");
+)";
     auto prog = parse(fibProgram);
     std::string progSExpr;
     for (const auto& stmt : prog.statements) {
-        progSExpr += stmt->toSExpr() + "\n";
+        progSExpr += stmt->toSExpr() + " ";
     }
 
-    REQUIRE(progSExpr == expected);
+    REQUIRE(normalize(progSExpr) == normalize(expected));
 }
