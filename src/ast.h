@@ -232,6 +232,7 @@ struct BlockStmt : Stmt {
 };
 
 struct FunCallStmt : Stmt {
+    explicit FunCallStmt(std::unique_ptr<FunCallExpr> c) : call(std::move(c)) {}
     std::unique_ptr<FunCallExpr> call;
 
     std::string toSExpr() const override { return call->toSExpr(); }

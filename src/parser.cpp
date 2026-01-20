@@ -178,11 +178,20 @@ std::unique_ptr<Stmt> Parser::parseStmt() {
         return parseDecl();
     } else if (match(TokenKind::Return)) {
         return parseReturnStmt();
+    // Function call
+    } else if (peek().kind == TokenKind::Identifier) {
+        auto expr = parseExpr();
+        if (auto funCall = dynamic_cast<FunCallExpr*>(expr.get())) {
+            auto _ = expr.release();
+            return std::make_unique<FunCallStmt>(std::unique_ptr<FunCallExpr>(funCall));
+        } else {
+            throw errorExpectedTok("function call statement");
+        }
     } if (match(TokenKind::If)) {
         return parseIfStmt();
     }
 
-    throw ParseError(std::format("Expected statement, but found '{}'", tokenKindToStr(tokens[position].kind)));
+    throw errorExpectedTok("declaration, return statement, or if statement");
 }
 
 std::unique_ptr<ReturnStmt> Parser::parseReturnStmt() {
@@ -202,15 +211,19 @@ std::unique_ptr<IfStmt> Parser::parseIfStmt() {
         throw errorExpectedTok("'then' after if condition");
     }
     std::vector<std::unique_ptr<Stmt>> thenBody;
-    while (!match(TokenKind::Else) && !match(TokenKind::End)) {
+    while (!match(TokenKind::Else) && !match(TokenKind::ElseIf) && !match(TokenKind::End)) {
         thenBody.emplace_back(parseStmt());
     }
+
     std::vector<std::unique_ptr<Stmt>> elseBody;
-    if (tokens[position - 1].kind == TokenKind::Else) {
+    if (tokens[position - 1].kind == TokenKind::ElseIf) {
+        elseBody.emplace_back(parseIfStmt());
+    } else if (tokens[position - 1].kind == TokenKind::Else) {
         while (!match(TokenKind::End)) {
             elseBody.emplace_back(parseStmt());
         }
     }
+
     return std::make_unique<IfStmt>(
         std::move(condition),
         std::move(thenBody),

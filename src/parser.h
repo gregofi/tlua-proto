@@ -27,9 +27,10 @@ private:
     Token shift();
     Token peek() const;
     ParseError errorExpectedTok(const std::string& expected) const {
-        return ParseError(std::format("Expected {}, but found '{}' at line {}, column {}",
+        return ParseError(std::format("Expected {}, but found '{}' ({}) at line {}, column {}",
             expected,
             tokens[position].lexeme,
+            tokenKindToStr(tokens[position].kind),
             tokens[position].line,
             tokens[position].column));
     }
