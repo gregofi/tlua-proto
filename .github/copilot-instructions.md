@@ -25,6 +25,10 @@ This is a typed Lua compiler/interpreter project written in C++.
 - **Use `auto&& x`** in lambda parameters where possible instead of writing explicit types
 - Example: `[](auto&& item) { ... }` instead of `[](const MyType& item) { ... }`
 
+### Constructors
+- Use member initializer lists for constructors
+- Pass by value and use `std::move` for movable types to avoid unnecessary copies
+
 ## General C++ Best Practices
 - Follow RAII principles for resource management
 - Prefer smart pointers over raw pointers, but there are exceptions! For example, Type is used as simple pointer.

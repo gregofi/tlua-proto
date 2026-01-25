@@ -7,6 +7,7 @@
 #include "lexer.h"
 #include <cassert>
 #include <format>
+#include <iostream>
 #include <vector>
 
 Program Parser::parse() { return parseTopLevel(); }
@@ -174,14 +175,21 @@ std::unique_ptr<Stmt> Parser::parseStmt() {
         return parseDecl();
     } else if (match(TokenKind::Return)) {
         return parseReturnStmt();
-        // Function call
+        // In global scope, a function call or a
+        // variable (or table member) assignment can be a statement.
     } else if (peek().kind == TokenKind::Identifier) {
         auto expr = parseExpr();
         if (auto funCall = dynamic_cast<FunCallExpr*>(expr.get())) {
             auto _ = expr.release();
             return std::make_unique<FunCallStmt>(std::unique_ptr<FunCallExpr>(funCall));
         } else {
-            throw errorExpectedTok("function call statement");
+            if (match(TokenKind::Assign)) {
+                auto valueExpr = parseExpr();
+                ;
+                return std::make_unique<AssignStmt>(std::move(expr), std::move(valueExpr));
+            } else {
+                throw errorExpectedTok("function call statement or assignment");
+            }
         }
     }
     if (match(TokenKind::If)) {
@@ -231,7 +239,7 @@ std::unique_ptr<VarDecl> Parser::parseVarDecl() {
     std::string varName = tokens[position - 1].lexeme;
 
     if (!match(TokenKind::Assign)) {
-        throw errorExpectedTok("'=' after variable name");
+        return std::make_unique<VarDecl>(varName, std::make_unique<NilExpr>());
     }
     auto initExpr = parseExpr();
     return std::make_unique<VarDecl>(varName, std::move(initExpr));

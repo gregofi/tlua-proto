@@ -34,6 +34,10 @@ struct NumberExpr : Expr {
     std::string toSExpr() const override { return std::format("(number {})", val); }
 };
 
+struct NilExpr : Expr {
+    std::string toSExpr() const override { return "(nil)"; }
+};
+
 struct VarExpr : Expr {
     VarExpr(std::string n) : name(std::move(n)) {}
     std::string name;
@@ -141,7 +145,6 @@ struct VarDecl : Decl {
     VarDecl(std::string name, std::unique_ptr<Expr> init)
         : Decl{std::move(name), true}, // VarDecls are always local
           init_expr(std::move(init)) {}
-    std::string name;
     std::unique_ptr<Expr> init_expr;
 
     std::string toSExpr() const override {
@@ -213,4 +216,15 @@ struct FunCallStmt : Stmt {
     std::unique_ptr<FunCallExpr> call;
 
     std::string toSExpr() const override { return call->toSExpr(); }
+};
+
+struct AssignStmt : Stmt {
+    AssignStmt(std::unique_ptr<Expr> l, std::unique_ptr<Expr> r)
+        : left(std::move(l)), right(std::move(r)) {}
+    std::unique_ptr<Expr> left;
+    std::unique_ptr<Expr> right;
+
+    std::string toSExpr() const override {
+        return std::format("(assign {} {})", left->toSExpr(), right->toSExpr());
+    }
 };

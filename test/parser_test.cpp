@@ -157,7 +157,7 @@ print(result)
                 (else (return (Plus
                                 (call (var fib) (Minus (var n) (number 1)))
                                 (call (var fib) (Minus (var n) (number 2))))))))))
-(var-decl  (call (var fib) (number 10)))
+(var-decl result (call (var fib) (number 10)))
 (call (var print) (var result))
 )";
     auto prog = parse(fibProgram);
@@ -167,4 +167,17 @@ print(result)
     }
 
     REQUIRE(normalize(progSExpr) == normalize(expected));
+}
+
+TEST_CASE("parse variable declarations with no initializer") {
+    auto prog = parse("local x\n");
+    auto expected = R"(
+(var-decl x (nil))
+)";
+    REQUIRE(normalize(prog.statements.at(0)->toSExpr()) == normalize(expected));
+}
+
+TEST_CASE("parse variable assignments") {
+    REQUIRE_NOTHROW(parse("x = 10\n"));
+    REQUIRE_NOTHROW(parse("obj.field = 42\n"));
 }

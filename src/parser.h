@@ -25,6 +25,8 @@ class Parser {
     /// Consumes current and returns the next token, advancing the position.
     Token shift();
     Token peek() const;
+    /// Restore the position to the last stashed point.
+    void restore(size_t stashed) { position = stashed; }
     ParseError errorExpectedTok(const std::string& expected) const {
         return ParseError(std::format("Expected {}, but found '{}' ({}) at line {}, column {}",
                                       expected, tokens[position].lexeme,
