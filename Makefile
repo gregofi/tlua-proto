@@ -47,7 +47,8 @@ $(TEST_BUILD_DIR):
 	mkdir -p $(TEST_BUILD_DIR)
 
 lexer_test_OBJS=$(OBJ_DIR)/lexer.o
-parser_test_OBJS=$(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o $(OBJ_DIR)/type.o
+parser_test_OBJS=$(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o $(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o
+environment_test_OBJS=$(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o
 
 .SECONDEXPANSION:
 $(TEST_BUILD_DIR)/%: $(TEST_DIR)/%.cpp $$(%_OBJS) | $(TEST_BUILD_DIR)
