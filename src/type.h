@@ -1,6 +1,7 @@
 #pragma once
 #include "utils.h"
 #include <format>
+#include <memory>
 #include <string>
 #include <vector>
 enum class TypeKind {
@@ -180,3 +181,28 @@ class RecordType : public Type {
 bool isSameType(Type* a, Type* b);
 bool isSubtype(Type* sub, Type* super);
 std::string typeToString(Type* type);
+
+// Type factory - owns all complex types
+class TypeFactory {
+  public:
+    static TypeFactory& instance();
+
+    // Primitive types (singletons, not owned by factory)
+    Type* numberType() const { return BasicType::numberType(); }
+    Type* stringType() const { return BasicType::stringType(); }
+    Type* booleanType() const { return BasicType::booleanType(); }
+    Type* nilType() const { return BasicType::nilType(); }
+    Type* unknownType() const { return BasicType::unknownType(); }
+    Type* anyType() const { return BasicType::anyType(); }
+
+    // Complex type factories (owned by factory)
+    Type* createFunctionType(std::vector<Type*> paramTypes, Type* returnType);
+    Type* createArrayType(Type* elementType);
+    Type* createTableType(std::vector<TableField> fields);
+    Type* createRecordType(Type* keyType, Type* valueType);
+    Type* createUnionType(std::vector<Type*> types);
+
+  private:
+    TypeFactory() = default;
+    std::vector<std::unique_ptr<Type>> types;
+};

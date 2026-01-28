@@ -155,3 +155,33 @@ std::string typeToString(Type* type) {
     }
     return type->toString();
 }
+
+TypeFactory& TypeFactory::instance() {
+    static TypeFactory factory;
+    return factory;
+}
+
+Type* TypeFactory::createFunctionType(std::vector<Type*> paramTypes, Type* returnType) {
+    types.push_back(std::make_unique<FunctionType>(std::move(paramTypes), returnType));
+    return types.back().get();
+}
+
+Type* TypeFactory::createArrayType(Type* elementType) {
+    types.push_back(std::make_unique<ArrayType>(elementType));
+    return types.back().get();
+}
+
+Type* TypeFactory::createTableType(std::vector<TableField> fields) {
+    types.push_back(std::make_unique<TableType>(std::move(fields)));
+    return types.back().get();
+}
+
+Type* TypeFactory::createRecordType(Type* keyType, Type* valueType) {
+    types.push_back(std::make_unique<RecordType>(keyType, valueType));
+    return types.back().get();
+}
+
+Type* TypeFactory::createUnionType(std::vector<Type*> types_list) {
+    types.push_back(std::make_unique<UnionType>(std::move(types_list)));
+    return types.back().get();
+}
