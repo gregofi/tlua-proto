@@ -1,4 +1,6 @@
 #pragma once
+#include "utils.h"
+#include <format>
 #include <string>
 #include <vector>
 enum class TypeKind {
@@ -27,44 +29,67 @@ class Type {
 
     virtual ~Type() = default;
 
+    TypeKind getKind() const { return kind; }
+
+    virtual std::string toString() const = 0;
+
   private:
     TypeKind kind;
 };
 
-class PrimitiveType : public Type {
+class BasicType : public Type {
   public:
-    Type* numberType() {
-        static PrimitiveType instance(TypeKind::Number);
+    static Type* numberType() {
+        static BasicType instance(TypeKind::Number);
         return &instance;
     }
 
-    Type* stringType() {
-        static PrimitiveType instance(TypeKind::String);
+    static Type* stringType() {
+        static BasicType instance(TypeKind::String);
         return &instance;
     }
 
-    Type* booleanType() {
-        static PrimitiveType instance(TypeKind::Boolean);
+    static Type* booleanType() {
+        static BasicType instance(TypeKind::Boolean);
         return &instance;
     }
 
-    Type* nilType() {
-        static PrimitiveType instance(TypeKind::Nil);
+    static Type* nilType() {
+        static BasicType instance(TypeKind::Nil);
         return &instance;
     }
 
-    Type* unknownType() {
-        static PrimitiveType instance(TypeKind::Unknown);
+    static Type* unknownType() {
+        static BasicType instance(TypeKind::Unknown);
         return &instance;
     }
 
-    Type* anyType() {
-        static PrimitiveType instance(TypeKind::Any);
+    static Type* anyType() {
+        static BasicType instance(TypeKind::Any);
         return &instance;
     }
 
-  protected:
-    PrimitiveType(TypeKind kind) : Type(kind) {}
+    std::string toString() const override {
+        switch (getKind()) {
+        case TypeKind::Number:
+            return "number";
+        case TypeKind::String:
+            return "string";
+        case TypeKind::Boolean:
+            return "boolean";
+        case TypeKind::Nil:
+            return "nil";
+        case TypeKind::Unknown:
+            return "unknown";
+        case TypeKind::Any:
+            return "any";
+        default:
+            return "<invalid-basic-type>";
+        }
+    }
+
+  private:
+    explicit BasicType(TypeKind kind) : Type(kind) {}
 };
 
 class FunctionType : public Type {
@@ -76,6 +101,12 @@ class FunctionType : public Type {
 
     Type* getReturnType() const { return returnType; }
 
+    std::string toString() const override {
+        auto toStrings =
+            std::ranges::views::transform(paramTypes, [](auto&& t) { return t->toString(); });
+        return std::format("({}) -> {}", join(toStrings, ", "), returnType->toString());
+    }
+
   private:
     std::vector<Type*> paramTypes;
     Type* returnType;
@@ -86,6 +117,12 @@ class UnionType : public Type {
     explicit UnionType(std::vector<Type*> types) : Type(TypeKind::Union), types(std::move(types)) {}
     const std::vector<Type*>& getTypes() const { return types; }
 
+    std::string toString() const override {
+        auto toStrings =
+            std::ranges::views::transform(types, [](auto&& t) { return t->toString(); });
+        return join(toStrings, " | ");
+    }
+
   private:
     std::vector<Type*> types;
 };
@@ -94,6 +131,8 @@ class ArrayType : public Type {
   public:
     explicit ArrayType(Type* element_type) : Type(TypeKind::Array), elementType(element_type) {}
     Type* getElementType() const { return elementType; }
+
+    std::string toString() const override { return std::format("{}[]", elementType->toString()); }
 
   private:
     Type* elementType;
@@ -110,6 +149,13 @@ class TableType : public Type {
         : Type(TypeKind::Table), fields(std::move(fields)) {}
     const std::vector<TableField>& getFields() const { return fields; }
 
+    std::string toString() const override {
+        auto fieldStrings = std::ranges::views::transform(fields, [](auto&& field) {
+            return std::format("{}: {}", field.key, field.val->toString());
+        });
+        return std::format("{{ {} }}", join(fieldStrings, ", "));
+    }
+
   private:
     std::vector<TableField> fields;
 };
@@ -121,7 +167,16 @@ class RecordType : public Type {
     Type* getKeyType() const { return keyType; }
     Type* getValueType() const { return valueType; }
 
+    std::string toString() const override {
+        return std::format("{{ [{}]: {} }}", keyType->toString(), valueType->toString());
+    }
+
   private:
     Type* keyType;
     Type* valueType;
 };
+
+// Type utilities
+bool isSameType(Type* a, Type* b);
+bool isSubtype(Type* sub, Type* super);
+std::string typeToString(Type* type);

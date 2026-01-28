@@ -3,6 +3,10 @@
 ## Project Overview
 This is a typed Lua compiler/interpreter project written in C++.
 
+The goal of this project is to have a sort of typescript for Lua.
+The basic implementation aims to be typecheck normal Lua (without any type annotations).
+Then progressively add type annotations to cover more advanced use cases.
+
 ## C++ Coding Standards
 
 ### Modern C++ Version
@@ -15,7 +19,7 @@ This is a typed Lua compiler/interpreter project written in C++.
 
 ### Ranges and Iterators
 - **Prefer ranges** over traditional `begin()`/`end()` iterator pairs where possible
-- Use range-based algorithms from `<ranges>` when applicable
+- Use range-based algorithms from `<ranges>` when applicable, but not necessarily use `::views` and `|` operators (only if it makes sense, i.e. multiple transformations in a row)
 
 ### Functional Programming
 - **Prefer `std::accumulate`, `std::transform`** and other standard algorithms instead of manual for loops
