@@ -6,12 +6,15 @@
 #include <string>
 #include <vector>
 
+#include "environment.h"
 #include "lexer.h"
 #include "type.h"
+#include "visitor.h"
 
 struct Ast {
     virtual ~Ast() = default;
     virtual std::string toSExpr() const = 0;
+    virtual void accept(Visitor& visitor) = 0;
 };
 
 struct Stmt : Ast {};
@@ -25,6 +28,7 @@ struct StringExpr : Expr {
     std::string val;
 
     std::string toSExpr() const override { return std::format("(string \"{}\")", val); }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct NumberExpr : Expr {
@@ -32,10 +36,12 @@ struct NumberExpr : Expr {
     double val;
 
     std::string toSExpr() const override { return std::format("(number {})", val); }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct NilExpr : Expr {
     std::string toSExpr() const override { return "(nil)"; }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct VarExpr : Expr {
@@ -43,6 +49,7 @@ struct VarExpr : Expr {
     std::string name;
 
     std::string toSExpr() const override { return std::format("(var {})", name); }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct UnaryOpExpr : Expr {
@@ -53,6 +60,7 @@ struct UnaryOpExpr : Expr {
     std::string toSExpr() const override {
         return std::format("({} {})", tokenKindToStr(op), right->toSExpr());
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct BinOpExpr : Expr {
@@ -65,6 +73,7 @@ struct BinOpExpr : Expr {
     std::string toSExpr() const override {
         return std::format("({} {} {})", tokenKindToStr(op), left->toSExpr(), right->toSExpr());
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct MemberAccessExpr : Expr {
@@ -76,6 +85,7 @@ struct MemberAccessExpr : Expr {
     std::string toSExpr() const override {
         return std::format("(. {} {})", object->toSExpr(), member_name);
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct MethodAccessExpr : Expr {
@@ -87,6 +97,7 @@ struct MethodAccessExpr : Expr {
     std::string toSExpr() const override {
         return std::format("(: {} {})", object->toSExpr(), method_name);
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct FunCallExpr : Expr {
@@ -102,6 +113,7 @@ struct FunCallExpr : Expr {
         // {}{} to avoid initial space
         return std::format("(call {}{})", callee->toSExpr(), argsStr);
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct Decl : Stmt {
@@ -138,6 +150,7 @@ struct FunDecl : Decl {
         return std::format("(fun {} {} ({}){})", local ? "local" : "global", name, paramsStr,
                            bodyStr);
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 /// Variable declaration
@@ -150,6 +163,7 @@ struct VarDecl : Decl {
     std::string toSExpr() const override {
         return std::format("(var-decl {} {})", name, init_expr->toSExpr());
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct VarDecls : Stmt {
@@ -163,6 +177,7 @@ struct VarDecls : Stmt {
         result += ")";
         return result;
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct IfStmt : Stmt {
@@ -184,6 +199,7 @@ struct IfStmt : Stmt {
         return std::format("(if {} (then{}){})", condition->toSExpr(), thenStr,
                            else_body.empty() ? "" : std::format(" (else{})", elseStr));
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct ReturnStmt : Stmt {
@@ -198,6 +214,7 @@ struct ReturnStmt : Stmt {
         result += ")";
         return result;
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct BlockStmt : Stmt {
@@ -209,6 +226,7 @@ struct BlockStmt : Stmt {
             [](std::string acc, auto&& stmt) { return acc + " " + stmt->toSExpr(); });
         return std::format("(block{})", stmts);
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct FunCallStmt : Stmt {
@@ -216,6 +234,7 @@ struct FunCallStmt : Stmt {
     std::unique_ptr<FunCallExpr> call;
 
     std::string toSExpr() const override { return call->toSExpr(); }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 struct AssignStmt : Stmt {
@@ -227,4 +246,5 @@ struct AssignStmt : Stmt {
     std::string toSExpr() const override {
         return std::format("(assign {} {})", left->toSExpr(), right->toSExpr());
     }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
