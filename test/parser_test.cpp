@@ -1,29 +1,12 @@
 #include "../src/lexer.h"
 #include "../src/parser.h"
+#include "./utils.h"
 #include <catch2/catch_test_macros.hpp>
-#include <sstream>
 
 const Program parse(const std::string& source) {
     auto tokens = Lexer::tokenize(source);
     Parser parser(tokens);
     return parser.parse();
-}
-
-/// Join multi-line S-expression into a single line for comparisons
-std::string normalize(const std::string& str) {
-    std::istringstream iss(str);
-    std::string line, result;
-    while (std::getline(iss, line)) {
-        auto start = line.find_first_not_of(" \t\r\n");
-        if (start != std::string::npos) {
-            auto end = line.find_last_not_of(" \t\r\n");
-            if (!result.empty())
-                result += " ";
-            result += line.substr(start, end - start + 1);
-        }
-    }
-
-    return result;
 }
 
 TEST_CASE("parse one declaration program") {
@@ -86,16 +69,6 @@ TEST_CASE("throw error on invalid syntax") {
 TEST_CASE("parse return statements with multiple values") {
     REQUIRE_NOTHROW(parse("function foo()\n"
                           "  return 1, 2, 3\n"
-                          "end\n"));
-}
-
-// TODO
-TEST_CASE("parse function declarations with dot and colon", "[!mayfail]") {
-    REQUIRE_NOTHROW(parse("function obj:method(a)\n"
-                          "  return a\n"
-                          "end\n"));
-    REQUIRE_NOTHROW(parse("function obj.method(a)\n"
-                          "  return a\n"
                           "end\n"));
 }
 

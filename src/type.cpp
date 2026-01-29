@@ -180,6 +180,12 @@ Type* TypeFactory::createRecordType(Type* keyType, Type* valueType) {
 }
 
 Type* TypeFactory::createUnionType(std::vector<Type*> types_list) {
+    // If Any is in the union, the whole union is Any
+    if (std::any_of(types_list.begin(), types_list.end(),
+                    [](Type* t) { return t->getKind() == TypeKind::Any; })) {
+        return anyType();
+    }
+
     types.push_back(std::make_unique<UnionType>(std::move(types_list)));
     return types.back().get();
 }

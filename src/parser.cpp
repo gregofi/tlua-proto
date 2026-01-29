@@ -89,6 +89,12 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
         return std::make_unique<VarExpr>(tokens[position - 1].lexeme);
     } else if (match(TokenKind::String)) {
         return std::make_unique<StringExpr>(tokens[position - 1].lexeme);
+    } else if (match(TokenKind::Nil)) {
+        return std::make_unique<NilExpr>();
+    } else if (match(TokenKind::True)) {
+        return std::make_unique<BooleanExpr>(true);
+    } else if (match(TokenKind::False)) {
+        return std::make_unique<BooleanExpr>(false);
     } else if (match(TokenKind::LParen)) {
         auto expr = parseExpr();
         if (!match(TokenKind::RParen)) {

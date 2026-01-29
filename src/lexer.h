@@ -1,5 +1,5 @@
 #pragma once
-#include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -8,6 +8,9 @@ enum class TokenKind {
     Identifier,
     Number,
     String,
+    Nil,
+    True,
+    False,
 
     // keywords
     Local,
@@ -51,13 +54,19 @@ enum class TokenKind {
 
 inline const char* tokenKindToStr(TokenKind kind) {
     static const char* tokenKindToString[] = {
-        "Identifier", "Number",  "String",       "Local",        "Function", "End",
-        "Return",     "If",      "Then",         "Else",         "ElseIf",   "LParen",
-        "RParen",     "LBrace",  "RBrace",       "Colon",        "Comma",    "Assign",
-        "Plus",       "Minus",   "Star",         "Slash",        "Equal",    "NotEqual",
-        "Less",       "Greater", "LessEqual",    "GreaterEqual", "And",      "Or",
-        "Not",        "Concat",  "MemberAccess", "MethodAccess", "Eof",
+        "Identifier",   "Number",       "String",       "Nil",    "True",  "False",    "Local",
+        "Function",     "End",          "Return",       "If",     "Then",  "Else",     "ElseIf",
+        "LParen",       "RParen",       "LBrace",       "RBrace", "Colon", "Comma",    "Assign",
+        "Plus",         "Minus",        "Star",         "Slash",  "Equal", "NotEqual", "Less",
+        "Greater",      "LessEqual",    "GreaterEqual", "And",    "Or",    "Not",      "Concat",
+        "MemberAccess", "MethodAccess", "Eof",
     };
+
+    size_t size = sizeof(tokenKindToString) / sizeof(tokenKindToString[0]);
+    if (static_cast<size_t>(kind) >= size) {
+        throw std::out_of_range("Invalid TokenKind value");
+    }
+
     return tokenKindToString[static_cast<int>(kind)];
 }
 

@@ -11,6 +11,10 @@ std::map<std::string, TokenKind> keywordMap = {
     {"then", TokenKind::Then},
     {"else", TokenKind::Else},
     {"elseif", TokenKind::ElseIf},
+
+    {"true", TokenKind::True},
+    {"false", TokenKind::False},
+    {"nil", TokenKind::Nil},
     // logical ops
     {"not", TokenKind::Not},
     {"and", TokenKind::And},

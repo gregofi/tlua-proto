@@ -210,3 +210,8 @@ void TypedAstPrinter::visit(AssignStmt& stmt) {
     stmt.right->accept(*this);
     result += ")";
 }
+
+void TypedAstPrinter::visit(BooleanExpr& expr) {
+    assert(expr.type != nullptr && "Type not inferred for BooleanExpr");
+    result += std::format("{} <{}>", expr.val ? "true" : "false", expr.type->toString());
+}

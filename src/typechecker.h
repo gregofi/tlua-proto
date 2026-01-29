@@ -25,6 +25,7 @@ class TypeChecker : public Visitor {
     void visit(StringExpr& expr) override;
     void visit(NumberExpr& expr) override;
     void visit(NilExpr& expr) override;
+    void visit(BooleanExpr& expr) override;
     void visit(VarExpr& expr) override;
     void visit(UnaryOpExpr& expr) override;
     void visit(BinOpExpr& expr) override;

@@ -20,6 +20,8 @@ void TypeChecker::visit(NumberExpr& expr) { expr.type = TypeFactory::numberType(
 
 void TypeChecker::visit(NilExpr& expr) { expr.type = TypeFactory::nilType(); }
 
+void TypeChecker::visit(BooleanExpr& expr) { expr.type = TypeFactory::booleanType(); }
+
 void TypeChecker::visit(VarExpr& expr) {
     Type* t = env.lookup(expr.name);
     if (t == nullptr) {
@@ -31,8 +33,20 @@ void TypeChecker::visit(VarExpr& expr) {
 
 void TypeChecker::visit(UnaryOpExpr& expr) {
     expr.right->accept(*this);
-    // TODO: typecheck operators
-    expr.type = expr.right->type;
+
+    switch (expr.op) {
+    case TokenKind::Minus:
+        if (!isNumber(expr.right->type)) {
+            throw error("Type error: unary minus requires a number type");
+        }
+        expr.type = expr.right->type;
+        break;
+    case TokenKind::Not:
+        expr.type = TypeFactory::booleanType();
+        break;
+    default:
+        throw error("Unknown unary operator in type checker");
+    }
 }
 
 void TypeChecker::visit(BinOpExpr& expr) {
@@ -56,15 +70,22 @@ void TypeChecker::visit(BinOpExpr& expr) {
         return;
     case TokenKind::Equal:
     case TokenKind::NotEqual:
+        expr.type = TypeFactory::booleanType();
+        return;
     case TokenKind::Less:
     case TokenKind::Greater:
     case TokenKind::LessEqual:
     case TokenKind::GreaterEqual:
-        expr.type = TypeFactory::booleanType();
-        return;
+        if ((isNumber(leftType) && isNumber(rightType)) ||
+            (isString(leftType) && isString(rightType))) {
+            expr.type = TypeFactory::booleanType();
+            return;
+        }
+        throw error("Type error: comparison requires number or string types");
     case TokenKind::And:
     case TokenKind::Or:
-        expr.type = TypeFactory::anyType();
+        // The result of logical ops can be any of the operand types => union
+        expr.type = TypeFactory::instance().createUnionType({leftType, rightType});
         return;
     case TokenKind::Concat:
         if (isString(leftType) && isString(rightType)) {
@@ -73,7 +94,7 @@ void TypeChecker::visit(BinOpExpr& expr) {
         }
         throw error("Type error: concat requires string or number types");
     default:
-        throw error("typeCheck not implemented for BinOpExpr");
+        throw error("Unknown binary operator in type checker");
     }
 }
 
@@ -89,15 +110,52 @@ void TypeChecker::visit(MethodAccessExpr& expr) {
 
 void TypeChecker::visit(FunCallExpr& expr) {
     expr.callee->accept(*this);
+    // check that its function
+    auto calleeType = expr.callee->type;
+    if (calleeType->getKind() != TypeKind::Function) {
+        throw error("Type error: trying to call a non-function type");
+    }
+
+    // parameter arity
+    auto funType = static_cast<FunctionType*>(calleeType);
+    if (funType->getParamTypes().size() != expr.args.size()) {
+        throw error("Type error: function called with incorrect number of arguments");
+    }
+
     for (auto& arg : expr.args) {
         arg->accept(*this);
     }
-    expr.type = TypeFactory::anyType();
+
+    // actual parameter types
+    for (size_t i = 0; i < expr.args.size(); ++i) {
+        Type* expectedType = funType->getParamTypes()[i];
+        Type* actualType = expr.args[i]->type;
+        if (!isSubtype(actualType, expectedType)) {
+            throw error("Type error: function argument type mismatch");
+        }
+    }
+
+    expr.type = funType->getReturnType();
 }
 
 // Statement implementations
 
-void TypeChecker::visit(FunDecl& stmt) { throw error("typeCheck not implemented for FunDecl"); }
+void TypeChecker::visit(FunDecl& stmt) {
+    std::vector<Type*> paramTypes;
+    for (const auto& _ : stmt.params) {
+        paramTypes.push_back(TypeFactory::anyType());
+    }
+    Type* returnType = TypeFactory::anyType();
+    Type* funcType = TypeFactory::instance().createFunctionType(paramTypes, returnType);
+    env.define(stmt.name, funcType);
+
+    env.pushScope();
+    for (size_t i = 0; i < stmt.params.size(); ++i) {
+        env.define(stmt.params[i], paramTypes[i]);
+    }
+    stmt.body->accept(*this);
+    env.popScope();
+}
 
 void TypeChecker::visit(VarDecl& stmt) {
     stmt.init_expr->accept(*this);

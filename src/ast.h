@@ -47,6 +47,16 @@ struct NilExpr : Expr {
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
+struct BooleanExpr : Expr {
+    BooleanExpr(bool v) : val(v) {}
+    bool val;
+
+    std::string toSExpr() const override {
+        return std::format("(boolean {})", val ? "true" : "false");
+    }
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
+};
+
 struct VarExpr : Expr {
     VarExpr(std::string n) : name(std::move(n)) {}
     std::string name;
