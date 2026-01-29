@@ -150,9 +150,7 @@ void TypedAstPrinter::visit(FunDecl& stmt) {
         result += " " + param;
     }
     result += ") ";
-    for (auto& body_stmt : stmt.body) {
-        body_stmt->accept(*this);
-    }
+    stmt.body->accept(*this);
     result += ")";
 }
 
@@ -177,12 +175,10 @@ void TypedAstPrinter::visit(IfStmt& stmt) {
     result += "(if ";
     stmt.condition->accept(*this);
     result += " then ";
-    for (auto& then_stmt : stmt.then_body) {
-        then_stmt->accept(*this);
-    }
-    for (auto& else_stmt : stmt.else_body) {
+    stmt.then_branch->accept(*this);
+    if (stmt.else_branch) {
         result += " else ";
-        else_stmt->accept(*this);
+        stmt.else_branch->accept(*this);
     }
     result += ")";
 }

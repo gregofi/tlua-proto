@@ -67,12 +67,12 @@ TEST_CASE("parse if-elseif-else statements") {
     auto expected = R"(
 (if
     (Equal (var x) (number 1))
-    (then (return (number 1)))
+    (then (block (return (number 1))))
     (else
         (if
             (Equal (var x) (number 2))
-            (then (return (number 2)))
-            (else (return (number 0))))))
+            (then (block (return (number 2))))
+            (else (block (return (number 0)))))))
 )";
     REQUIRE(normalize(prog.statements.at(0)->toSExpr()) == normalize(expected));
 }
@@ -149,14 +149,14 @@ print(result)
 )";
     auto expected = R"(
 (fun global fib (n)
-    (if (Equal (var n) (number 0))
-        (then (return (number 0)))
+    (block (if (Equal (var n) (number 0))
+        (then (block (return (number 0))))
         (else
             (if (Equal (var n) (number 1))
-                (then (return (number 1)))
-                (else (return (Plus
+                (then (block (return (number 1))))
+                (else (block (return (Plus
                                 (call (var fib) (Minus (var n) (number 1)))
-                                (call (var fib) (Minus (var n) (number 2))))))))))
+                                (call (var fib) (Minus (var n) (number 2))))))))))))
 (var-decl result (call (var fib) (number 10)))
 (call (var print) (var result))
 )";

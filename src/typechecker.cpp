@@ -110,7 +110,13 @@ void TypeChecker::visit(VarDecls& stmt) {
     }
 }
 
-void TypeChecker::visit(IfStmt& stmt) { stmt.condition->accept(*this); }
+void TypeChecker::visit(IfStmt& stmt) {
+    stmt.condition->accept(*this);
+    stmt.then_branch->accept(*this);
+    if (stmt.else_branch) {
+        stmt.else_branch->accept(*this);
+    }
+}
 
 void TypeChecker::visit(ReturnStmt& stmt) {
     for (auto& val : stmt.return_values) {

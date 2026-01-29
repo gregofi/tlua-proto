@@ -215,21 +215,24 @@ std::unique_ptr<IfStmt> Parser::parseIfStmt() {
     if (!match(TokenKind::Then)) {
         throw errorExpectedTok("'then' after if condition");
     }
-    std::vector<std::unique_ptr<Stmt>> thenBody;
+    auto thenBlock = std::make_unique<BlockStmt>();
     while (!match(TokenKind::Else) && !match(TokenKind::ElseIf) && !match(TokenKind::End)) {
-        thenBody.emplace_back(parseStmt());
+        thenBlock->statements.emplace_back(parseStmt());
     }
 
-    std::vector<std::unique_ptr<Stmt>> elseBody;
+    std::unique_ptr<Stmt> elseStmt = nullptr;
     if (tokens[position - 1].kind == TokenKind::ElseIf) {
-        elseBody.emplace_back(parseIfStmt());
+        elseStmt = parseIfStmt();
     } else if (tokens[position - 1].kind == TokenKind::Else) {
+        auto elseBlock = std::make_unique<BlockStmt>();
         while (!match(TokenKind::End)) {
-            elseBody.emplace_back(parseStmt());
+            elseBlock->statements.emplace_back(parseStmt());
         }
+        elseStmt = std::move(elseBlock);
     }
 
-    return std::make_unique<IfStmt>(std::move(condition), std::move(thenBody), std::move(elseBody));
+    return std::make_unique<IfStmt>(std::move(condition), std::move(thenBlock),
+                                    std::move(elseStmt));
 }
 
 std::unique_ptr<VarDecl> Parser::parseVarDecl() {
@@ -281,9 +284,9 @@ std::unique_ptr<FunDecl> Parser::parseFunDecl(bool local) {
         }
     }
 
-    std::vector<std::unique_ptr<Stmt>> body;
+    auto body = std::make_unique<BlockStmt>();
     while (!match(TokenKind::End)) {
-        body.emplace_back(parseStmt());
+        body->statements.emplace_back(parseStmt());
     }
 
     return std::make_unique<FunDecl>(functionName, local,

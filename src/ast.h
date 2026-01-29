@@ -127,7 +127,7 @@ struct Decl : Stmt {
 
 struct FunDecl : Decl {
     FunDecl(std::string name, bool local, std::optional<std::string> this_name, bool method,
-            std::vector<std::string> params, std::vector<std::unique_ptr<Stmt>> body)
+            std::vector<std::string> params, std::unique_ptr<Stmt> body)
         : Decl{std::move(name), local}, this_name(std::move(this_name)), method(method),
           params(std::move(params)), body(std::move(body)) {}
     // Fundecls may be methods:
@@ -140,18 +140,15 @@ struct FunDecl : Decl {
     bool method;
 
     std::vector<std::string> params;
-    std::vector<std::unique_ptr<Stmt>> body;
+    std::unique_ptr<Stmt> body;
 
     std::string toSExpr() const override {
         auto paramsStr = std::accumulate(params.begin(), params.end(), std::string{},
                                          [](std::string acc, const std::string& param) {
                                              return acc + (acc.empty() ? "" : " ") + param;
                                          });
-        auto bodyStr = std::accumulate(
-            body.begin(), body.end(), std::string{},
-            [](std::string acc, auto&& stmt) { return acc + " " + stmt->toSExpr(); });
-        return std::format("(fun {} {} ({}){})", local ? "local" : "global", name, paramsStr,
-                           bodyStr);
+        return std::format("(fun {} {} ({}) {})", local ? "local" : "global", name, paramsStr,
+                           body->toSExpr());
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
@@ -184,23 +181,23 @@ struct VarDecls : Stmt {
 };
 
 struct IfStmt : Stmt {
-    IfStmt(std::unique_ptr<Expr> cond, std::vector<std::unique_ptr<Stmt>> then_b,
-           std::vector<std::unique_ptr<Stmt>> else_b)
-        : condition(std::move(cond)), then_body(std::move(then_b)), else_body(std::move(else_b)) {}
+    IfStmt(std::unique_ptr<Expr> cond, std::unique_ptr<Stmt> then_b,
+           std::unique_ptr<Stmt> else_b = nullptr)
+        : condition(std::move(cond)), then_branch(std::move(then_b)),
+          else_branch(std::move(else_b)) {}
 
     std::unique_ptr<Expr> condition;
-    std::vector<std::unique_ptr<Stmt>> then_body;
-    std::vector<std::unique_ptr<Stmt>> else_body;
+    std::unique_ptr<Stmt> then_branch;
+    std::unique_ptr<Stmt> else_branch;
 
     std::string toSExpr() const override {
-        auto thenStr = std::accumulate(
-            then_body.begin(), then_body.end(), std::string{},
-            [](std::string acc, auto&& stmt) { return acc + " " + stmt->toSExpr(); });
-        auto elseStr = std::accumulate(
-            else_body.begin(), else_body.end(), std::string{},
-            [](std::string acc, auto&& stmt) { return acc + " " + stmt->toSExpr(); });
-        return std::format("(if {} (then{}){})", condition->toSExpr(), thenStr,
-                           else_body.empty() ? "" : std::format(" (else{})", elseStr));
+        std::string result =
+            std::format("(if {} (then {}))", condition->toSExpr(), then_branch->toSExpr());
+        if (else_branch) {
+            result = std::format("(if {} (then {}) (else {}))", condition->toSExpr(),
+                                 then_branch->toSExpr(), else_branch->toSExpr());
+        }
+        return result;
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
