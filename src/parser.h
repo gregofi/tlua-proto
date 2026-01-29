@@ -5,10 +5,6 @@
 #include <memory>
 #include <vector>
 
-struct Program {
-    std::vector<std::unique_ptr<Stmt>> statements;
-};
-
 class ParseError : public std::runtime_error {
   public:
     ParseError(const std::string& message) : std::runtime_error(message) {}

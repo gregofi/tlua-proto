@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -33,7 +34,6 @@ enum class TokenKind {
     Star,
     Slash,
     Equal,
-    EqualEqual,
     NotEqual,
     Less,
     Greater,
@@ -51,12 +51,12 @@ enum class TokenKind {
 
 inline const char* tokenKindToStr(TokenKind kind) {
     static const char* tokenKindToString[] = {
-        "Identifier", "Number", "String",  "Local",        "Function",     "End",
-        "Return",     "If",     "Then",    "Else",         "ElseIf",       "LParen",
-        "RParen",     "LBrace", "RBrace",  "Colon",        "Comma",        "Assign",
-        "Plus",       "Minus",  "Star",    "Slash",        "Equal",        "EqualEqual",
-        "NotEqual",   "Less",   "Greater", "LessEqual",    "GreaterEqual", "And",
-        "Or",         "Not",    "Concat",  "MemberAccess", "MethodAccess", "Eof",
+        "Identifier", "Number",  "String",       "Local",        "Function", "End",
+        "Return",     "If",      "Then",         "Else",         "ElseIf",   "LParen",
+        "RParen",     "LBrace",  "RBrace",       "Colon",        "Comma",    "Assign",
+        "Plus",       "Minus",   "Star",         "Slash",        "Equal",    "NotEqual",
+        "Less",       "Greater", "LessEqual",    "GreaterEqual", "And",      "Or",
+        "Not",        "Concat",  "MemberAccess", "MethodAccess", "Eof",
     };
     return tokenKindToString[static_cast<int>(kind)];
 }

@@ -188,12 +188,12 @@ class TypeFactory {
     static TypeFactory& instance();
 
     // Primitive types (singletons, not owned by factory)
-    Type* numberType() const { return BasicType::numberType(); }
-    Type* stringType() const { return BasicType::stringType(); }
-    Type* booleanType() const { return BasicType::booleanType(); }
-    Type* nilType() const { return BasicType::nilType(); }
-    Type* unknownType() const { return BasicType::unknownType(); }
-    Type* anyType() const { return BasicType::anyType(); }
+    static Type* numberType() { return BasicType::numberType(); }
+    static Type* stringType() { return BasicType::stringType(); }
+    static Type* booleanType() { return BasicType::booleanType(); }
+    static Type* nilType() { return BasicType::nilType(); }
+    static Type* unknownType() { return BasicType::unknownType(); }
+    static Type* anyType() { return BasicType::anyType(); }
 
     // Complex type factories (owned by factory)
     Type* createFunctionType(std::vector<Type*> paramTypes, Type* returnType);

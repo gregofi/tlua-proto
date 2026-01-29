@@ -1,6 +1,4 @@
 #include "type.h"
-#include <algorithm>
-#include <format>
 
 bool isSameType(Type* a, Type* b) {
     if (a == b) {

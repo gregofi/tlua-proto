@@ -1,9 +1,12 @@
 #include "../src/lexer.h"
 #include <catch2/catch_test_macros.hpp>
+#include <iostream>
 
 TEST_CASE("should be able to tokenize simple source") {
+    std::cerr << "Running lexer test..." << std::endl;
     std::string source = "local x = 10";
     auto tokens = Lexer::tokenize(source);
+    std::cerr << "Tokens generated:" << std::endl;
     REQUIRE(tokens.size() == 5); // local, identifier, =, number, eof
     REQUIRE(tokens[0].kind == TokenKind::Local);
     REQUIRE(tokens[1].kind == TokenKind::Identifier);

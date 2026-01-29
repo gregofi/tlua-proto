@@ -1,25 +1,15 @@
 #pragma once
+
 #include "ast.h"
-#include "environment.h"
-#include "parser.h"
 #include "visitor.h"
+#include <string>
+#include <vector>
 
-#include <stdexcept>
-
-class TypeCheckError : public std::runtime_error {
+class TypedAstPrinter : public Visitor {
   public:
-    explicit TypeCheckError(const std::string& message) : std::runtime_error(message) {}
-};
-
-class TypeChecker : public Visitor {
-  public:
-    TypeChecker();
-
-    void typeCheck(Program& program) {
-        for (auto& stmt : program.statements) {
-            stmt->accept(*this);
-        }
-    }
+    std::string print(Program& program);
+    std::string print(Expr& expr);
+    std::string print(Stmt& stmt);
 
     // Expression visitors
     void visit(StringExpr& expr) override;
@@ -42,9 +32,9 @@ class TypeChecker : public Visitor {
     void visit(FunCallStmt& stmt) override;
     void visit(AssignStmt& stmt) override;
 
-    Environment& getEnv() { return env; }
-
   private:
-    TypeCheckError error(const std::string& message) const { return TypeCheckError(message); }
-    Environment env;
+    std::string result;
+
+    void parenthesize(const std::string& name, const std::vector<Expr*>& exprs);
+    void parenthesize(const std::string& name, const std::vector<std::unique_ptr<Expr>>& exprs);
 };

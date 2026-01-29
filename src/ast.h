@@ -6,7 +6,6 @@
 #include <string>
 #include <vector>
 
-#include "environment.h"
 #include "lexer.h"
 #include "type.h"
 #include "visitor.h"
@@ -18,6 +17,10 @@ struct Ast {
 };
 
 struct Stmt : Ast {};
+
+struct Program {
+    std::vector<std::unique_ptr<Stmt>> statements;
+};
 
 struct Expr : Ast {
     Type* type = nullptr;
