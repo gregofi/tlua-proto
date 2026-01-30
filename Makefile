@@ -50,6 +50,7 @@ lexer_test_OBJS=$(OBJ_DIR)/lexer.o $(OBJ_DIR)/typechecker.o $(OBJ_DIR)/type.o $(
 parser_test_OBJS=$(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o $(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o $(OBJ_DIR)/typechecker.o
 environment_test_OBJS=$(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o $(OBJ_DIR)/typechecker.o
 typechecker_test_OBJS=$(OBJ_DIR)/typed_ast_printer.o $(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o $(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o $(OBJ_DIR)/typechecker.o
+lua_codegen_test_OBJS=$(OBJ_DIR)/lua_codegen.o $(OBJ_DIR)/parser.o $(OBJ_DIR)/lexer.o $(OBJ_DIR)/type.o $(OBJ_DIR)/environment.o $(OBJ_DIR)/typechecker.o
 
 .SECONDEXPANSION:
 $(TEST_BUILD_DIR)/%: $(TEST_DIR)/%.cpp $$(%_OBJS) | $(TEST_BUILD_DIR)

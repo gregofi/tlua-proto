@@ -110,8 +110,13 @@ void TypeChecker::visit(MethodAccessExpr& expr) {
 
 void TypeChecker::visit(FunCallExpr& expr) {
     expr.callee->accept(*this);
-    // check that its function
     auto calleeType = expr.callee->type;
+    if (calleeType->getKind() == TypeKind::Any) {
+        expr.type = TypeFactory::anyType();
+        return;
+    }
+
+    // check that its function
     if (calleeType->getKind() != TypeKind::Function) {
         throw error("Type error: trying to call a non-function type");
     }

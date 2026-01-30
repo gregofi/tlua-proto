@@ -38,3 +38,6 @@ Then progressively add type annotations to cover more advanced use cases.
 - Prefer smart pointers over raw pointers, but there are exceptions! For example, Type is used as simple pointer.
 - Use `constexpr` and `const` appropriately
 - Leverage structured bindings where appropriate
+
+## Testing
+- Use the catch2 framework for unit tests

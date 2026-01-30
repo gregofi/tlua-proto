@@ -5,7 +5,9 @@
 #include <vector>
 
 #include "lexer.h"
+#include "lua_codegen.h"
 #include "parser.h"
+#include "typechecker.h"
 
 std::string readFileContents(const std::string& filename) {
     std::ifstream file(filename);
@@ -47,6 +49,7 @@ int main(int argc, char* argv[]) {
             std::print("[{}] ", tokenKindToStr(token.kind));
         }
         std::cout << std::endl;
+        return 0;
     }
 
     if (sexpr) {
@@ -56,5 +59,15 @@ int main(int argc, char* argv[]) {
         for (const auto& stmt : program.statements) {
             std::println("{}", stmt->toSExpr());
         }
+        return 0;
     }
+
+    // Default: compile
+    auto tokens = Lexer::tokenize(sourceCode);
+    Parser parser(tokens);
+    auto program = parser.parse();
+    TypeChecker typechecker;
+    typechecker.typeCheck(program);
+    LuaCodegen codegen;
+    std::println("{}", codegen.generate(program));
 }
