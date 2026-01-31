@@ -82,6 +82,32 @@ std::optional<int> Parser::postfixPrecedence(TokenKind kind) const {
     }
 }
 
+std::unique_ptr<TableExpr> Parser::parseTableExpr() {
+    std::vector<std::unique_ptr<Expr>> arrayElements;
+    std::vector<TableKeyVal> keyValueElements;
+    while (!match(TokenKind::RBrace)) {
+        auto expr = parseExpr();
+        if (match(TokenKind::Assign)) {
+            auto id = dynamic_cast<VarExpr*>(expr.get());
+            if (!id) {
+                throw ParseError("Expected identifier in table key=value assignment");
+            }
+            auto valueExpr = parseExpr();
+            TableKeyVal kv{id->name, std::move(valueExpr)};
+            keyValueElements.emplace_back(std::move(kv));
+        } else {
+            arrayElements.emplace_back(std::move(expr));
+        }
+
+        if (!match(TokenKind::Comma)) {
+            if (peek().kind != TokenKind::RBrace) {
+                throw errorExpectedTok("',' or '}' in table constructor");
+            }
+        }
+    }
+    return std::make_unique<TableExpr>(std::move(arrayElements), std::move(keyValueElements));
+}
+
 std::unique_ptr<Expr> Parser::parseAtomExpr() {
     if (match(TokenKind::Number)) {
         return std::make_unique<NumberExpr>(std::stod(tokens[position - 1].lexeme));
@@ -95,6 +121,8 @@ std::unique_ptr<Expr> Parser::parseAtomExpr() {
         return std::make_unique<BooleanExpr>(true);
     } else if (match(TokenKind::False)) {
         return std::make_unique<BooleanExpr>(false);
+    } else if (match(TokenKind::LBrace)) {
+        return parseTableExpr();
     } else if (match(TokenKind::LParen)) {
         auto expr = parseExpr();
         if (!match(TokenKind::RParen)) {

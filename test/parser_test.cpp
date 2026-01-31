@@ -154,3 +154,10 @@ TEST_CASE("parse variable assignments") {
     REQUIRE_NOTHROW(parse("x = 10\n"));
     REQUIRE_NOTHROW(parse("obj.field = 42\n"));
 }
+
+TEST_CASE("parse table expressions") {
+    REQUIRE_NOTHROW(parse("local t = {}\n"));
+    REQUIRE_NOTHROW(parse("local t = {1, 2, 3}\n"));
+    REQUIRE_NOTHROW(parse("local t = {a = 1, b = 2}\n"));
+    REQUIRE_NOTHROW(parse("local t = {1, 2, a = 3, b = 4}\n"));
+}

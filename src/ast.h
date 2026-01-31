@@ -65,6 +65,34 @@ struct VarExpr : Expr {
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
+/// Key-val pair in table.
+/// This only represents the key-value in table literal,
+/// because otherwise numbers for example can also be keys.
+struct TableKeyVal {
+    std::string key;
+    std::unique_ptr<Expr> value;
+};
+
+struct TableExpr : Expr {
+    TableExpr(std::vector<std::unique_ptr<Expr>> arr, std::vector<TableKeyVal> map)
+        : arrayPart(std::move(arr)), mapPart(std::move(map)) {}
+    std::vector<std::unique_ptr<Expr>> arrayPart;
+    std::vector<TableKeyVal> mapPart;
+
+    std::string toSExpr() const override {
+        auto arrayStr = std::accumulate(
+            arrayPart.begin(), arrayPart.end(), std::string{},
+            [](std::string acc, auto&& expr) { return acc + " " + expr->toSExpr(); });
+        auto mapStr = std::accumulate(
+            mapPart.begin(), mapPart.end(), std::string{}, [](std::string acc, auto&& expr) {
+                return acc + " (" + expr.key + " " + expr.value->toSExpr() + ")";
+            });
+        return std::format("(table (array{} ) (map{} ))", arrayStr, mapStr);
+    }
+
+    void accept(Visitor& visitor) override { visitor.visit(*this); }
+};
+
 struct UnaryOpExpr : Expr {
     UnaryOpExpr(TokenKind o, std::unique_ptr<Expr> r) : op(o), right(std::move(r)) {}
     TokenKind op;

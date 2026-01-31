@@ -1,7 +1,6 @@
 #pragma once
 #include "ast.h"
 #include "environment.h"
-#include "parser.h"
 #include "visitor.h"
 
 #include <stdexcept>
@@ -26,6 +25,7 @@ class TypeChecker : public Visitor {
     void visit(NumberExpr& expr) override;
     void visit(NilExpr& expr) override;
     void visit(BooleanExpr& expr) override;
+    void visit(TableExpr& expr) override;
     void visit(VarExpr& expr) override;
     void visit(UnaryOpExpr& expr) override;
     void visit(BinOpExpr& expr) override;

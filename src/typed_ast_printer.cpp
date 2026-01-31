@@ -215,3 +215,8 @@ void TypedAstPrinter::visit(BooleanExpr& expr) {
     assert(expr.type != nullptr && "Type not inferred for BooleanExpr");
     result += std::format("{} <{}>", expr.val ? "true" : "false", expr.type->toString());
 }
+
+void TypedAstPrinter::visit(TableExpr& expr) {
+    assert(expr.type != nullptr && "Type not inferred for TableExpr");
+    throw std::runtime_error("TypedAstPrinter::visit(TableExpr&) not implemented");
+}

@@ -12,8 +12,6 @@ TypeChecker::TypeChecker() {
     env.pushScope(); // global scope
 }
 
-// Expression implementations
-
 void TypeChecker::visit(StringExpr& expr) { expr.type = TypeFactory::stringType(); }
 
 void TypeChecker::visit(NumberExpr& expr) { expr.type = TypeFactory::numberType(); }
@@ -21,6 +19,8 @@ void TypeChecker::visit(NumberExpr& expr) { expr.type = TypeFactory::numberType(
 void TypeChecker::visit(NilExpr& expr) { expr.type = TypeFactory::nilType(); }
 
 void TypeChecker::visit(BooleanExpr& expr) { expr.type = TypeFactory::booleanType(); }
+
+void TypeChecker::visit(TableExpr& expr) { expr.type = TypeFactory::anyType(); }
 
 void TypeChecker::visit(VarExpr& expr) {
     Type* t = env.lookup(expr.name);

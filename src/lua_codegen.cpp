@@ -122,6 +122,25 @@ void LuaCodegen::visit(NilExpr& /*expr*/) { result += "nil"; }
 
 void LuaCodegen::visit(BooleanExpr& expr) { result += expr.val ? "true" : "false"; }
 
+void LuaCodegen::visit(TableExpr& expr) {
+    result += "{";
+    std::vector<std::string> elements;
+
+    // Array elements
+    for (const auto& element : expr.arrayPart) {
+        elements.push_back(generateExprString(*element));
+    }
+
+    // Key-value pairs
+    for (const auto& kv : expr.mapPart) {
+        std::string keyValStr = std::format("[{}] = {}", kv.key, generateExprString(*kv.value));
+        elements.push_back(keyValStr);
+    }
+
+    result += join(elements, ", ");
+    result += "}";
+}
+
 void LuaCodegen::visit(VarExpr& expr) { result += expr.name; }
 
 void LuaCodegen::visit(UnaryOpExpr& expr) {

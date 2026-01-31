@@ -5,6 +5,7 @@ struct StringExpr;
 struct NumberExpr;
 struct NilExpr;
 struct BooleanExpr;
+struct TableExpr;
 struct VarExpr;
 struct UnaryOpExpr;
 struct BinOpExpr;
@@ -29,6 +30,7 @@ class Visitor {
     virtual void visit(NumberExpr& expr) = 0;
     virtual void visit(NilExpr& expr) = 0;
     virtual void visit(BooleanExpr& expr) = 0;
+    virtual void visit(TableExpr& expr) = 0;
     virtual void visit(VarExpr& expr) = 0;
     virtual void visit(UnaryOpExpr& expr) = 0;
     virtual void visit(BinOpExpr& expr) = 0;
