@@ -84,7 +84,7 @@ std::optional<int> Parser::postfixPrecedence(TokenKind kind) const {
 
 std::unique_ptr<TableExpr> Parser::parseTableExpr() {
     std::vector<std::unique_ptr<Expr>> arrayElements;
-    std::vector<TableKeyVal> keyValueElements;
+    std::map<std::string, std::unique_ptr<Expr>> keyValueElements;
     while (!match(TokenKind::RBrace)) {
         auto expr = parseExpr();
         if (match(TokenKind::Assign)) {
@@ -93,8 +93,7 @@ std::unique_ptr<TableExpr> Parser::parseTableExpr() {
                 throw ParseError("Expected identifier in table key=value assignment");
             }
             auto valueExpr = parseExpr();
-            TableKeyVal kv{id->name, std::move(valueExpr)};
-            keyValueElements.emplace_back(std::move(kv));
+            keyValueElements[id->name] = std::move(valueExpr);
         } else {
             arrayElements.emplace_back(std::move(expr));
         }

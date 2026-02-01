@@ -77,15 +77,9 @@ bool isSameType(Type* a, Type* b) {
             return false;
         }
 
-        for (const auto& field1 : table1->getFields()) {
-            bool found = false;
-            for (const auto& field2 : table2->getFields()) {
-                if (field1.key == field2.key && isSameType(field1.val, field2.val)) {
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
+        for (const auto& [key, val] : table1->getFields()) {
+            auto it = table2->getFields().find(key);
+            if (it == table2->getFields().end() || !isSameType(val, it->second)) {
                 return false;
             }
         }
@@ -154,6 +148,23 @@ std::string typeToString(Type* type) {
     return type->toString();
 }
 
+Type* unifyTypes(std::vector<Type*> types) {
+    if (types.empty()) {
+        return TypeFactory::unknownType();
+    }
+
+    // Check if all types are the same
+    Type* first = types[0];
+    bool allSame =
+        std::all_of(types.begin(), types.end(), [first](auto&& t) { return isSameType(t, first); });
+
+    if (allSame) {
+        return first;
+    }
+
+    return TypeFactory::instance().createUnionType(std::move(types));
+}
+
 TypeFactory& TypeFactory::instance() {
     static TypeFactory factory;
     return factory;
@@ -169,7 +180,7 @@ Type* TypeFactory::createArrayType(Type* elementType) {
     return types.back().get();
 }
 
-Type* TypeFactory::createTableType(std::vector<TableField> fields) {
+Type* TypeFactory::createTableType(std::map<std::string, Type*> fields) {
     types.push_back(std::make_unique<TableType>(std::move(fields)));
     return types.back().get();
 }

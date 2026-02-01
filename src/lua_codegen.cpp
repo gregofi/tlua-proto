@@ -132,8 +132,8 @@ void LuaCodegen::visit(TableExpr& expr) {
     }
 
     // Key-value pairs
-    for (const auto& kv : expr.mapPart) {
-        std::string keyValStr = std::format("[{}] = {}", kv.key, generateExprString(*kv.value));
+    for (const auto& [key, value] : expr.mapPart) {
+        std::string keyValStr = std::format("[{}] = {}", key, generateExprString(*value));
         elements.push_back(keyValStr);
     }
 

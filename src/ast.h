@@ -1,5 +1,6 @@
 #pragma once
 #include <format>
+#include <map>
 #include <memory>
 #include <numeric>
 #include <optional>
@@ -65,27 +66,20 @@ struct VarExpr : Expr {
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
-/// Key-val pair in table.
-/// This only represents the key-value in table literal,
-/// because otherwise numbers for example can also be keys.
-struct TableKeyVal {
-    std::string key;
-    std::unique_ptr<Expr> value;
-};
-
 struct TableExpr : Expr {
-    TableExpr(std::vector<std::unique_ptr<Expr>> arr, std::vector<TableKeyVal> map)
+    TableExpr(std::vector<std::unique_ptr<Expr>> arr,
+              std::map<std::string, std::unique_ptr<Expr>> map)
         : arrayPart(std::move(arr)), mapPart(std::move(map)) {}
     std::vector<std::unique_ptr<Expr>> arrayPart;
-    std::vector<TableKeyVal> mapPart;
+    std::map<std::string, std::unique_ptr<Expr>> mapPart;
 
     std::string toSExpr() const override {
         auto arrayStr = std::accumulate(
             arrayPart.begin(), arrayPart.end(), std::string{},
             [](std::string acc, auto&& expr) { return acc + " " + expr->toSExpr(); });
         auto mapStr = std::accumulate(
-            mapPart.begin(), mapPart.end(), std::string{}, [](std::string acc, auto&& expr) {
-                return acc + " (" + expr.key + " " + expr.value->toSExpr() + ")";
+            mapPart.begin(), mapPart.end(), std::string{}, [](std::string acc, auto&& kv) {
+                return acc + " (" + kv.first + " " + kv.second->toSExpr() + ")";
             });
         return std::format("(table (array{} ) (map{} ))", arrayStr, mapStr);
     }

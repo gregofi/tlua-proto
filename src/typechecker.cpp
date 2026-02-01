@@ -20,7 +20,39 @@ void TypeChecker::visit(NilExpr& expr) { expr.type = TypeFactory::nilType(); }
 
 void TypeChecker::visit(BooleanExpr& expr) { expr.type = TypeFactory::booleanType(); }
 
-void TypeChecker::visit(TableExpr& expr) { expr.type = TypeFactory::anyType(); }
+void TypeChecker::visit(TableExpr& expr) {
+    // Mixed tables are forbidden: either pure array or pure record
+    bool hasArrayPart = !expr.arrayPart.empty();
+    bool hasMapPart = !expr.mapPart.empty();
+
+    if (hasArrayPart && hasMapPart) {
+        throw error("Type error: mixed table literals are not allowed. "
+                    "Use either array syntax {1, 2, 3} or record syntax {a = 1, b = 2}");
+    }
+
+    if (hasArrayPart) {
+        // Infer array type with unified element type
+        std::vector<Type*> elementTypes;
+        elementTypes.reserve(expr.arrayPart.size());
+        for (auto& elem : expr.arrayPart) {
+            elem->accept(*this);
+            elementTypes.push_back(elem->type);
+        }
+        Type* elementType = unifyTypes(std::move(elementTypes));
+        expr.type = TypeFactory::instance().createArrayType(elementType);
+    } else if (hasMapPart) {
+        // Infer record/table type with named fields
+        std::map<std::string, Type*> fields;
+        for (auto& [key, value] : expr.mapPart) {
+            value->accept(*this);
+            fields[key] = value->type;
+        }
+        expr.type = TypeFactory::instance().createTableType(std::move(fields));
+    } else {
+        // Empty table {} is an empty record
+        expr.type = TypeFactory::instance().createTableType({});
+    }
+}
 
 void TypeChecker::visit(VarExpr& expr) {
     Type* t = env.lookup(expr.name);
@@ -93,6 +125,34 @@ void TypeChecker::visit(BinOpExpr& expr) {
             return;
         }
         throw error("Type error: concat requires string or number types");
+    case TokenKind::MemberAccess: {
+        // Member access: left must be a table, right must be a VarExpr with the field name
+        if (leftType->getKind() == TypeKind::Any) {
+            expr.type = TypeFactory::anyType();
+            return;
+        }
+        if (leftType->getKind() != TypeKind::Table) {
+            throw error(std::format("Type error: cannot access member on non-table type {}",
+                                    leftType->toString()));
+        }
+        auto* tableType = static_cast<TableType*>(leftType);
+        // The right side is parsed as a VarExpr containing the field name
+        auto* varExpr = dynamic_cast<VarExpr*>(expr.right.get());
+        if (!varExpr) {
+            throw error("Type error: member access requires an identifier");
+        }
+        auto it = tableType->getFields().find(varExpr->name);
+        if (it != tableType->getFields().end()) {
+            expr.type = it->second;
+            return;
+        }
+        throw error(std::format("Type error: field '{}' does not exist on type {}", varExpr->name,
+                                leftType->toString()));
+    }
+    case TokenKind::MethodAccess:
+        // Method access returns any for now
+        expr.type = TypeFactory::anyType();
+        return;
     default:
         throw error("Unknown binary operator in type checker");
     }
@@ -100,7 +160,28 @@ void TypeChecker::visit(BinOpExpr& expr) {
 
 void TypeChecker::visit(MemberAccessExpr& expr) {
     expr.object->accept(*this);
-    expr.type = TypeFactory::anyType();
+    Type* objType = expr.object->type;
+
+    // If the object type is any, result is any
+    if (objType->getKind() == TypeKind::Any) {
+        expr.type = TypeFactory::anyType();
+        return;
+    }
+
+    // For table types (records), look up the field
+    if (objType->getKind() == TypeKind::Table) {
+        auto* tableType = static_cast<TableType*>(objType);
+        auto it = tableType->getFields().find(expr.member_name);
+        if (it != tableType->getFields().end()) {
+            expr.type = it->second;
+            return;
+        }
+        throw error(std::format("Type error: field '{}' does not exist on type {}",
+                                expr.member_name, objType->toString()));
+    }
+
+    throw error(std::format("Type error: cannot access member '{}' on non-table type {}",
+                            expr.member_name, objType->toString()));
 }
 
 void TypeChecker::visit(MethodAccessExpr& expr) {

@@ -1,6 +1,7 @@
 #pragma once
 #include "utils.h"
 #include <format>
+#include <map>
 #include <memory>
 #include <string>
 #include <vector>
@@ -139,26 +140,21 @@ class ArrayType : public Type {
     Type* elementType;
 };
 
-struct TableField {
-    std::string key;
-    Type* val;
-};
-
 class TableType : public Type {
   public:
-    explicit TableType(std::vector<TableField> fields)
+    explicit TableType(std::map<std::string, Type*> fields)
         : Type(TypeKind::Table), fields(std::move(fields)) {}
-    const std::vector<TableField>& getFields() const { return fields; }
+    const std::map<std::string, Type*>& getFields() const { return fields; }
 
     std::string toString() const override {
         auto fieldStrings = std::ranges::views::transform(fields, [](auto&& field) {
-            return std::format("{}: {}", field.key, field.val->toString());
+            return std::format("{}: {}", field.first, field.second->toString());
         });
         return std::format("{{ {} }}", join(fieldStrings, ", "));
     }
 
   private:
-    std::vector<TableField> fields;
+    std::map<std::string, Type*> fields;
 };
 
 class RecordType : public Type {
@@ -182,6 +178,11 @@ bool isSameType(Type* a, Type* b);
 bool isSubtype(Type* sub, Type* super);
 std::string typeToString(Type* type);
 
+/// Unify multiple types into a single type.
+/// If all types are the same, returns that type.
+/// Otherwise, creates a union type.
+Type* unifyTypes(std::vector<Type*> types);
+
 // Type factory - owns all complex types
 class TypeFactory {
   public:
@@ -198,7 +199,7 @@ class TypeFactory {
     // Complex type factories (owned by factory)
     Type* createFunctionType(std::vector<Type*> paramTypes, Type* returnType);
     Type* createArrayType(Type* elementType);
-    Type* createTableType(std::vector<TableField> fields);
+    Type* createTableType(std::map<std::string, Type*> fields);
     Type* createRecordType(Type* keyType, Type* valueType);
     Type* createUnionType(std::vector<Type*> types);
 

@@ -218,5 +218,26 @@ void TypedAstPrinter::visit(BooleanExpr& expr) {
 
 void TypedAstPrinter::visit(TableExpr& expr) {
     assert(expr.type != nullptr && "Type not inferred for TableExpr");
-    throw std::runtime_error("TypedAstPrinter::visit(TableExpr&) not implemented");
+    result += "(table";
+    // Array part
+    if (!expr.arrayPart.empty()) {
+        result += " (array";
+        for (auto& elem : expr.arrayPart) {
+            result += " ";
+            elem->accept(*this);
+        }
+        result += ")";
+    }
+    // Map part
+    if (!expr.mapPart.empty()) {
+        result += " (map";
+        for (auto& [key, value] : expr.mapPart) {
+            result += std::format(" ({} ", key);
+            value->accept(*this);
+            result += ")";
+        }
+        result += ")";
+    }
+    result += std::format(" <{}>", expr.type->toString());
+    result += ")";
 }
