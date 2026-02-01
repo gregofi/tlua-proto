@@ -5,11 +5,116 @@
 #include <numeric>
 #include <optional>
 #include <string>
+#include <variant>
 #include <vector>
 
 #include "lexer.h"
 #include "type.h"
 #include "visitor.h"
+
+// Helper for std::visit with overloaded lambdas
+template <class... Ts>
+struct overloaded : Ts... {
+    using Ts::operator()...;
+};
+template <class... Ts>
+overloaded(Ts...) -> overloaded<Ts...>;
+
+// Forward declaration
+class TypeAnnotation;
+
+// Basic type annotation (number, string, boolean, nil)
+struct BasicTypeAnnotation {
+    enum class Kind { Number, String, Boolean, Nil };
+    Kind kind;
+};
+
+// Function type annotation: (param1, param2, ...) -> returnType
+struct FunctionTypeAnnotation {
+    std::vector<TypeAnnotation> paramTypes;
+    std::unique_ptr<TypeAnnotation> returnType;
+};
+
+// Table type annotation: { field1: type1, field2: type2, ... }
+struct TableTypeAnnotation {
+    std::map<std::string, TypeAnnotation> fields;
+};
+
+// Array type annotation: type[]
+struct ArrayTypeAnnotation {
+    std::unique_ptr<TypeAnnotation> elementType;
+};
+
+// Union type annotation: type1 | type2 | ...
+struct UnionTypeAnnotation {
+    std::vector<TypeAnnotation> types;
+};
+
+class TypeAnnotation {
+    using Variant = std::variant<BasicTypeAnnotation, FunctionTypeAnnotation,
+                                  TableTypeAnnotation, ArrayTypeAnnotation, UnionTypeAnnotation>;
+    Variant annotation;
+
+public:
+    template <typename T>
+    TypeAnnotation(T&& value) : annotation(std::forward<T>(value)) {}
+
+    const Variant& getVariant() const { return annotation; }
+
+    std::string toString() const {
+        return std::visit(
+            overloaded{
+                [](const BasicTypeAnnotation& arg) -> std::string {
+                    switch (arg.kind) {
+                    case BasicTypeAnnotation::Kind::Number:
+                        return "number";
+                    case BasicTypeAnnotation::Kind::String:
+                        return "string";
+                    case BasicTypeAnnotation::Kind::Boolean:
+                        return "boolean";
+                    case BasicTypeAnnotation::Kind::Nil:
+                        return "nil";
+                    }
+                    return "unknown";
+                },
+                [](const FunctionTypeAnnotation& arg) -> std::string {
+                    std::string result = "(";
+                    for (size_t i = 0; i < arg.paramTypes.size(); ++i) {
+                        if (i > 0)
+                            result += ", ";
+                        result += arg.paramTypes[i].toString();
+                    }
+                    result += ") -> ";
+                    result += arg.returnType ? arg.returnType->toString() : "void";
+                    return result;
+                },
+                [](const TableTypeAnnotation& arg) -> std::string {
+                    std::string result = "{";
+                    bool first = true;
+                    for (const auto& [field, type] : arg.fields) {
+                        if (!first)
+                            result += ", ";
+                        first = false;
+                        result += field + ": " + type.toString();
+                    }
+                    result += "}";
+                    return result;
+                },
+                [](const ArrayTypeAnnotation& arg) -> std::string {
+                    return arg.elementType->toString() + "[]";
+                },
+                [](const UnionTypeAnnotation& arg) -> std::string {
+                    std::string result;
+                    for (size_t i = 0; i < arg.types.size(); ++i) {
+                        if (i > 0)
+                            result += " | ";
+                        result += arg.types[i].toString();
+                    }
+                    return result;
+                }},
+            annotation);
+    }
+};
 
 struct Ast {
     virtual ~Ast() = default;
@@ -143,45 +248,77 @@ struct Decl : Stmt {
     Decl(std::string name, bool local) : name(std::move(name)), local(local) {}
     std::string name;
     bool local;
+    Type* type = nullptr;
+};
+
+struct Parameter {
+    std::string name;
+    std::optional<TypeAnnotation> typeAnnotation;
+
+    Parameter(std::string n, std::optional<TypeAnnotation> ta = std::nullopt)
+        : name(std::move(n)), typeAnnotation(std::move(ta)) {}
+
+    std::string toString() const {
+        if (typeAnnotation.has_value()) {
+            return std::format("{}:{}", name, typeAnnotation->toString());
+        } else {
+            return name;
+        }
+    }
 };
 
 struct FunDecl : Decl {
-    FunDecl(std::string name, bool local, std::optional<std::string> this_name, bool method,
-            std::vector<std::string> params, std::unique_ptr<Stmt> body)
-        : Decl{std::move(name), local}, this_name(std::move(this_name)), method(method),
-          params(std::move(params)), body(std::move(body)) {}
+    FunDecl(std::string name, bool local, std::optional<std::string> thisName, bool method,
+            std::vector<Parameter> params, std::unique_ptr<Stmt> body,
+            std::optional<TypeAnnotation> retType = std::nullopt)
+        : Decl{std::move(name), local}, thisName(std::move(thisName)), method(method),
+          params(std::move(params)), body(std::move(body)), returnTypeAnnotation(std::move(retType)) {}
     // Fundecls may be methods:
     // function obj:method(params)
     // Also, they may be regular functions with dot notation:
     // function obj.method(params)
-    // In both cases, `this_name` is set to "obj".
-    // If it's a method, `is_method` is true.
-    std::optional<std::string> this_name;
+    // In both cases, `thisName` is set to "obj".
+    // If it's a method, `method` is true.
+    std::optional<std::string> thisName;
     bool method;
 
-    std::vector<std::string> params;
+    std::vector<Parameter> params;
     std::unique_ptr<Stmt> body;
+    std::optional<TypeAnnotation> returnTypeAnnotation;
 
     std::string toSExpr() const override {
         auto paramsStr = std::accumulate(params.begin(), params.end(), std::string{},
-                                         [](std::string acc, const std::string& param) {
-                                             return acc + (acc.empty() ? "" : " ") + param;
+                                         [](std::string acc, const Parameter& param) {
+                                             std::string paramStr = param.name;
+                                             if (param.typeAnnotation.has_value()) {
+                                                 paramStr += ":" + param.typeAnnotation->toString();
+                                             }
+                                             return acc + (acc.empty() ? "" : " ") + paramStr;
                                          });
-        return std::format("(fun {} {} ({}) {})", local ? "local" : "global", name, paramsStr,
-                           body->toSExpr());
+        std::string retTypeStr = returnTypeAnnotation.has_value() 
+                                    ? " -> " + returnTypeAnnotation->toString()
+                                    : "";
+        return std::format("(fun {} {}{} ({}) {})", local ? "local" : "global", name, 
+                           retTypeStr, paramsStr, body->toSExpr());
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
 /// Variable declaration
 struct VarDecl : Decl {
-    VarDecl(std::string name, std::unique_ptr<Expr> init)
+    VarDecl(std::string name, std::unique_ptr<Expr> init,
+            std::optional<TypeAnnotation> typeAnnotation = std::nullopt)
         : Decl{std::move(name), true}, // VarDecls are always local
-          init_expr(std::move(init)) {}
-    std::unique_ptr<Expr> init_expr;
+          initExpr(std::move(init)), typeAnnotation(std::move(typeAnnotation)) {}
+    std::unique_ptr<Expr> initExpr;
+    std::optional<TypeAnnotation> typeAnnotation;
 
     std::string toSExpr() const override {
-        return std::format("(var-decl {} {})", name, init_expr->toSExpr());
+        std::string nameWithType = name;
+        if (typeAnnotation.has_value()) {
+            nameWithType += ":" + typeAnnotation->toString();
+        }
+        return std::format("(var-decl {} {})", nameWithType, initExpr->toSExpr());
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };

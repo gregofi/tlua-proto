@@ -144,7 +144,7 @@ void TypedAstPrinter::visit(FunDecl& stmt) {
     result += "(fun " + stmt.name;
     result += " (params";
     for (const auto& param : stmt.params) {
-        result += " " + param;
+        result += " " + param.name;
     }
     result += ") ";
     stmt.body->accept(*this);
@@ -153,7 +153,7 @@ void TypedAstPrinter::visit(FunDecl& stmt) {
 
 void TypedAstPrinter::visit(VarDecl& stmt) {
     result += "(var-decl " + stmt.name + " ";
-    stmt.init_expr->accept(*this);
+    stmt.initExpr->accept(*this);
     result += ")";
 }
 

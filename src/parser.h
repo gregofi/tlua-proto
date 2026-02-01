@@ -53,6 +53,7 @@ class Parser {
     std::unique_ptr<Decl> parseDecl();
     std::unique_ptr<FunDecl> parseFunDecl(bool local);
     std::unique_ptr<VarDecl> parseVarDecl();
+    std::optional<TypeAnnotation> parseTypeAnnotation();
     std::vector<Token> tokens;
     size_t position;
 };

@@ -76,7 +76,7 @@ Token Lexer::getNextToken() {
             return tok(TokenKind::RBracket, "]");
         case ':':
             advance();
-            return tok(TokenKind::MethodAccess, ":");
+            return tok(TokenKind::Colon, ":");
         case ',':
             advance();
             return tok(TokenKind::Comma, ",");
@@ -85,6 +85,10 @@ Token Lexer::getNextToken() {
             return tok(TokenKind::Plus, "+");
         case '-':
             advance();
+            if (peek() == '>') {
+                advance();
+                return tok(TokenKind::Arrow, "->");
+            }
             return tok(TokenKind::Minus, "-");
         case '*':
             advance();

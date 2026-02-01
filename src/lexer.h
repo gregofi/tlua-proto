@@ -32,6 +32,7 @@ enum class TokenKind {
     Colon,
     Comma,
     Assign,
+    Arrow,
 
     // operators
     Plus,
@@ -60,8 +61,8 @@ inline const char* tokenKindToStr(TokenKind kind) {
         "Identifier", "Number", "String",  "Nil",          "True",         "False",    "Local",
         "Function",   "End",    "Return",  "If",           "Then",         "Else",     "ElseIf",
         "LParen",     "RParen", "LBrace",  "RBrace",       "LBracket",     "RBracket", "Colon",
-        "Comma",      "Assign", "Plus",    "Minus",        "Star",         "Slash",    "Equal",
-        "NotEqual",   "Less",   "Greater", "LessEqual",    "GreaterEqual", "And",      "Or",
+        "Comma",      "Assign", "Arrow",   "Plus",         "Minus",        "Star",     "Slash",
+        "Equal",      "NotEqual",   "Less",   "Greater", "LessEqual",    "GreaterEqual", "And",      "Or",
         "Not",        "Length", "Concat",  "MemberAccess", "MethodAccess", "Eof",
     };
 

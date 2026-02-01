@@ -241,24 +241,45 @@ void TypeChecker::visit(FunCallExpr& expr) {
 
 void TypeChecker::visit(FunDecl& stmt) {
     std::vector<Type*> paramTypes;
-    for (const auto& _ : stmt.params) {
-        paramTypes.push_back(TypeFactory::anyType());
+    for (const auto& param : stmt.params) {
+        if (param.typeAnnotation.has_value()) {
+            paramTypes.push_back(resolveTypeAnnotation(param.typeAnnotation.value()));
+        } else {
+            paramTypes.push_back(TypeFactory::anyType());
+        }
     }
-    Type* returnType = TypeFactory::anyType();
+    
+    Type* returnType;
+    if (stmt.returnTypeAnnotation.has_value()) {
+        returnType = resolveTypeAnnotation(stmt.returnTypeAnnotation.value());
+    } else {
+        returnType = TypeFactory::anyType();
+    }
+    
     Type* funcType = TypeFactory::instance().createFunctionType(paramTypes, returnType);
+    stmt.type = funcType;
     env.define(stmt.name, funcType);
 
     env.pushScope();
     for (size_t i = 0; i < stmt.params.size(); ++i) {
-        env.define(stmt.params[i], paramTypes[i]);
+        env.define(stmt.params[i].name, paramTypes[i]);
     }
     stmt.body->accept(*this);
     env.popScope();
 }
 
 void TypeChecker::visit(VarDecl& stmt) {
-    stmt.init_expr->accept(*this);
-    env.define(stmt.name, stmt.init_expr->type);
+    stmt.initExpr->accept(*this);
+    
+    if (stmt.typeAnnotation.has_value()) {
+        Type* annotatedType = resolveTypeAnnotation(stmt.typeAnnotation.value());
+        // TODO: Check if init_expr type is compatible with annotated type
+        stmt.type = annotatedType;
+        env.define(stmt.name, annotatedType);
+    } else {
+        stmt.type = stmt.initExpr->type;
+        env.define(stmt.name, stmt.initExpr->type);
+    }
 }
 
 void TypeChecker::visit(VarDecls& stmt) {
@@ -294,4 +315,39 @@ void TypeChecker::visit(FunCallStmt& stmt) { stmt.call->accept(*this); }
 void TypeChecker::visit(AssignStmt& stmt) {
     stmt.left->accept(*this);
     stmt.right->accept(*this);
+}
+
+Type* TypeChecker::resolveTypeAnnotation(const TypeAnnotation& annotation) {
+    return std::visit(
+        overloaded{
+            [](const BasicTypeAnnotation& basic) -> Type* {
+                switch (basic.kind) {
+                case BasicTypeAnnotation::Kind::Number:
+                    return BasicType::numberType();
+                case BasicTypeAnnotation::Kind::String:
+                    return BasicType::stringType();
+                case BasicTypeAnnotation::Kind::Boolean:
+                    return BasicType::booleanType();
+                case BasicTypeAnnotation::Kind::Nil:
+                    return BasicType::nilType();
+                }
+                return TypeFactory::unknownType();
+            },
+            [](const FunctionTypeAnnotation&) -> Type* {
+                // TODO: Implement function type annotations
+                throw TypeCheckError("Function type annotations not yet supported");
+            },
+            [](const TableTypeAnnotation&) -> Type* {
+                // TODO: Implement table type annotations
+                throw TypeCheckError("Table type annotations not yet supported");
+            },
+            [](const ArrayTypeAnnotation&) -> Type* {
+                // TODO: Implement array type annotations
+                throw TypeCheckError("Array type annotations not yet supported");
+            },
+            [](const UnionTypeAnnotation&) -> Type* {
+                // TODO: Implement union type annotations
+                throw TypeCheckError("Union type annotations not yet supported");
+            }},
+        annotation.getVariant());
 }

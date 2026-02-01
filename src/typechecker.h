@@ -46,5 +46,6 @@ class TypeChecker : public Visitor {
 
   private:
     TypeCheckError error(const std::string& message) const { return TypeCheckError(message); }
+    Type* resolveTypeAnnotation(const TypeAnnotation& annotation);
     Environment env;
 };

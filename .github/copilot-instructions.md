@@ -9,6 +9,12 @@ Then progressively add type annotations to cover more advanced use cases.
 
 ## C++ Coding Standards
 
+### Naming Conventions
+- Use **camelCase** for variable and function names
+- Use **PascalCase** for class and struct names
+- Use **UPPER_SNAKE_CASE** for constants and macros
+- Do not prefix members, prefix global non-const variables with g_
+
 ### Modern C++ Version
 - Use modern C++ features up to **C++23**
 - Leverage the latest standard library features where applicable
@@ -32,6 +38,11 @@ Then progressively add type annotations to cover more advanced use cases.
 ### Constructors
 - Use member initializer lists for constructors
 - Pass by value and use `std::move` for movable types to avoid unnecessary copies
+
+### Variants
+- When handling `std::variant`, prefer using `std::visit` over manual `std::get` calls for type-safe access
+  - Use the `overloaded` helper pattern for cleaner visitor implementations, if doing `match`-like behavior.
+  - If handling only one type from the variant, `std::get_if` or `std::holds_alternative` is acceptable.
 
 ## General C++ Best Practices
 - Follow RAII principles for resource management

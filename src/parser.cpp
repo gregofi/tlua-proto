@@ -55,7 +55,7 @@ std::pair<int, int> Parser::opPrecedence(TokenKind kind) const {
     case TokenKind::Concat:
         return {50, 51};
     case TokenKind::MemberAccess:
-    case TokenKind::MethodAccess:
+    case TokenKind::Colon: // Method access (obj:method)
         return {60, 61};
     default:
         return {-1, -1}; // causes the parser to stop parsing further
@@ -283,11 +283,17 @@ std::unique_ptr<VarDecl> Parser::parseVarDecl() {
     }
     std::string varName = tokens[position - 1].lexeme;
 
+    // Parse optional type annotation
+    std::optional<TypeAnnotation> typeAnnotation;
+    if (match(TokenKind::Colon)) {
+        typeAnnotation = parseTypeAnnotation();
+    }
+
     if (!match(TokenKind::Assign)) {
-        return std::make_unique<VarDecl>(varName, std::make_unique<NilExpr>());
+        return std::make_unique<VarDecl>(varName, std::make_unique<NilExpr>(), std::move(typeAnnotation));
     }
     auto initExpr = parseExpr();
-    return std::make_unique<VarDecl>(varName, std::move(initExpr));
+    return std::make_unique<VarDecl>(varName, std::move(initExpr), std::move(typeAnnotation));
 }
 
 std::unique_ptr<Decl> Parser::parseDecl() {
@@ -312,18 +318,32 @@ std::unique_ptr<FunDecl> Parser::parseFunDecl(bool local) {
         throw errorExpectedTok("'(' after function name");
     }
 
-    std::vector<std::string> parameters;
+    std::vector<Parameter> parameters;
     if (!match(TokenKind::RParen)) {
         do {
             if (!match(TokenKind::Identifier)) {
                 throw errorExpectedTok("parameter name");
             }
-            parameters.push_back(tokens[position - 1].lexeme);
+            std::string paramName = tokens[position - 1].lexeme;
+            
+            // Parse optional type annotation
+            std::optional<TypeAnnotation> typeAnnotation;
+            if (match(TokenKind::Colon)) {
+                typeAnnotation = parseTypeAnnotation();
+            }
+            
+            parameters.emplace_back(std::move(paramName), std::move(typeAnnotation));
         } while (match(TokenKind::Comma));
 
         if (!match(TokenKind::RParen)) {
             throw errorExpectedTok("')' after parameters");
         }
+    }
+
+    // Parse optional return type annotation
+    std::optional<TypeAnnotation> returnTypeAnnotation;
+    if (match(TokenKind::Arrow)) {
+        returnTypeAnnotation = parseTypeAnnotation();
     }
 
     auto body = std::make_unique<BlockStmt>();
@@ -334,5 +354,36 @@ std::unique_ptr<FunDecl> Parser::parseFunDecl(bool local) {
     return std::make_unique<FunDecl>(functionName, local,
                                      std::nullopt, // TODO
                                      false,        // TODO
-                                     std::move(parameters), std::move(body));
+                                     std::move(parameters), std::move(body),
+                                     std::move(returnTypeAnnotation));
 }
+
+std::optional<TypeAnnotation> Parser::parseTypeAnnotation() {
+    std::string typeName;
+    
+    // Accept either Identifier or specific keywords as type names
+    if (match(TokenKind::Identifier)) {
+        typeName = tokens[position - 1].lexeme;
+    } else if (match(TokenKind::Nil)) {
+        typeName = "nil";
+    } else {
+        throw errorExpectedTok("type name");
+    }
+    
+    // For now, only support basic types
+    BasicTypeAnnotation::Kind kind;
+    if (typeName == "number") {
+        kind = BasicTypeAnnotation::Kind::Number;
+    } else if (typeName == "string") {
+        kind = BasicTypeAnnotation::Kind::String;
+    } else if (typeName == "boolean") {
+        kind = BasicTypeAnnotation::Kind::Boolean;
+    } else if (typeName == "nil") {
+        kind = BasicTypeAnnotation::Kind::Nil;
+    } else {
+        throw ParseError(std::format("Unknown type: {}", typeName));
+    }
+    
+    return TypeAnnotation{BasicTypeAnnotation{kind}};
+}
+

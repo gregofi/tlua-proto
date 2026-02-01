@@ -185,8 +185,8 @@ void LuaCodegen::visit(FunDecl& stmt) {
     }
     result += "function ";
 
-    if (stmt.this_name) {
-        result += *stmt.this_name;
+    if (stmt.thisName) {
+        result += *stmt.thisName;
         if (stmt.method) {
             result += ":";
         } else {
@@ -196,7 +196,11 @@ void LuaCodegen::visit(FunDecl& stmt) {
     result += stmt.name;
 
     result += "(";
-    result += join(stmt.params, ", ");
+    std::vector<std::string> params;
+    std::transform(stmt.params.begin(), stmt.params.end(),
+                   std::back_inserter(params),
+                   [](auto&& param) { return param.toString(); });
+    result += join(params, ", ");
     result += ")";
     newline();
 
@@ -214,7 +218,7 @@ void LuaCodegen::visit(VarDecl& stmt) {
     result += "local ";
     result += stmt.name;
     result += " = ";
-    stmt.init_expr->accept(*this);
+    stmt.initExpr->accept(*this);
 }
 
 void LuaCodegen::visit(VarDecls& stmt) {
@@ -227,7 +231,7 @@ void LuaCodegen::visit(VarDecls& stmt) {
     result += " = ";
     std::vector<std::string> initExprs;
     std::transform(stmt.decls.begin(), stmt.decls.end(), std::back_inserter(initExprs),
-                   [this](auto&& decl) { return generateExprString(*decl->init_expr); });
+                   [this](auto&& decl) { return generateExprString(*decl->initExpr); });
     result += join(initExprs, ", ");
 }
 

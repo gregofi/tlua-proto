@@ -208,3 +208,34 @@ TEST_CASE("Table indexing returns any") {
 )";
     REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
 }
+
+TEST_CASE("Type annotations - basic types in variables") {
+    std::string code = R"(
+local n: number = 42
+local s: string = "hello"
+local b: boolean = true
+local x: nil = nil
+)";
+    std::string expected = R"(
+(var-decl n 42 <number>)
+(var-decl s 'hello' <string>)
+(var-decl b true <boolean>)
+(var-decl x nil <nil>)
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Type annotations - function with typed parameters and return") {
+    std::string code = R"(
+function add(x: number, y: number) -> number
+    return x + y
+end
+
+local result = add(2, 3)
+)";
+    std::string expected = R"(
+(fun add (params x y) (block (return (+ <number> (var x <number>) (var y <number>)))))
+(var-decl result (call <number> (var add <(number, number) -> number>) 2 <number> 3 <number>))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
