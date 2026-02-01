@@ -13,3 +13,14 @@ TEST_CASE("should be able to tokenize simple source") {
     REQUIRE(tokens[3].lexeme == "10");
     REQUIRE(tokens[4].kind == TokenKind::Eof);
 }
+
+TEST_CASE("should tokenize length operator") {
+    std::string source = "#arr";
+    auto tokens = Lexer::tokenize(source);
+    REQUIRE(tokens.size() == 3); // #, identifier, eof
+    REQUIRE(tokens[0].kind == TokenKind::Length);
+    REQUIRE(tokens[0].lexeme == "#");
+    REQUIRE(tokens[1].kind == TokenKind::Identifier);
+    REQUIRE(tokens[1].lexeme == "arr");
+    REQUIRE(tokens[2].kind == TokenKind::Eof);
+}

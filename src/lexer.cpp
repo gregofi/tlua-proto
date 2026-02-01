@@ -89,6 +89,9 @@ Token Lexer::getNextToken() {
         case '.':
             advance();
             return tok(TokenKind::MemberAccess, ".");
+        case '#':
+            advance();
+            return tok(TokenKind::Length, "#");
         case '<': {
             advance();
             if (peek() == '=') {

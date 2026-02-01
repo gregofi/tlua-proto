@@ -139,3 +139,15 @@ TEST_CASE("Codegen logical operators") {
     REQUIRE(generate_lua("local a = true and false") == "local a = true and false");
     REQUIRE(generate_lua("local a = true or false") == "local a = true or false");
 }
+
+TEST_CASE("Codegen length operator") {
+    std::string code = "local arr = {1, 2, 3}\nlocal len = #arr";
+    std::string expected = "local arr = {1, 2, 3}\nlocal len = #arr";
+    REQUIRE(generate_lua(code) == expected);
+}
+
+TEST_CASE("Codegen length on table literal") {
+    std::string code = "local len = #{1, 2}";
+    std::string expected = "local len = #{1, 2}";
+    REQUIRE(generate_lua(code) == expected);
+}

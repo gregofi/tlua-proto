@@ -134,3 +134,30 @@ local a = obj.z
 )";
     REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
 }
+
+TEST_CASE("Length operator on array") {
+    std::string code = "local arr = {1, 2, 3}\nlocal len = #arr";
+    std::string expected = R"(
+(var-decl arr (table (array 1 <number> 2 <number> 3 <number>) <number[]>))
+(var-decl len (# <number> (var arr <number[]>)))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Length operator on nested expression") {
+    std::string code = "local len = #{1, 2, 3}";
+    std::string expected = R"(
+(var-decl len (# <number> (table (array 1 <number> 2 <number> 3 <number>) <number[]>)))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Length operator on non-array throws") {
+    std::string code = "local len = #42";
+    REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
+}
+
+TEST_CASE("Length operator on record throws") {
+    std::string code = "local obj = {x = 10}\nlocal len = #obj";
+    REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
+}

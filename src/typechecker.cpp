@@ -76,6 +76,13 @@ void TypeChecker::visit(UnaryOpExpr& expr) {
     case TokenKind::Not:
         expr.type = TypeFactory::booleanType();
         break;
+    case TokenKind::Length:
+        if (expr.right->type->getKind() != TypeKind::Array && !isAny(expr.right->type)) {
+            throw error(std::format("Type error: length operator requires array type, got {}",
+                                    expr.right->type->toString()));
+        }
+        expr.type = TypeFactory::numberType();
+        break;
     default:
         throw error("Unknown unary operator in type checker");
     }

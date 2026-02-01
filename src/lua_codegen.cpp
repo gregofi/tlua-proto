@@ -33,6 +33,8 @@ const char* tokenKindToLuaOperator(TokenKind kind) {
         return "or";
     case TokenKind::Not:
         return "not";
+    case TokenKind::Length:
+        return "#";
     case TokenKind::Concat:
         return "..";
     default:

@@ -82,6 +82,8 @@ TEST_CASE("binary expressions parsing") {
 TEST_CASE("unary expressions parsing") {
     REQUIRE_NOTHROW(parse("local result = -x"));
     REQUIRE_NOTHROW(parse("local result = not flag"));
+    REQUIRE_NOTHROW(parse("local result = #arr"));
+    REQUIRE_NOTHROW(parse("local result = #obj.field"));
 }
 
 TEST_CASE("parse function calls") {

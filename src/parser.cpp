@@ -7,7 +7,6 @@
 #include "lexer.h"
 #include <cassert>
 #include <format>
-#include <iostream>
 #include <vector>
 
 Program Parser::parse() { return parseTopLevel(); }
@@ -67,6 +66,7 @@ std::optional<int> Parser::prefixPrecedence(TokenKind kind) const {
     switch (kind) {
     case TokenKind::Minus:
     case TokenKind::Not:
+    case TokenKind::Length:
         return 70;
     default:
         return std::nullopt;
