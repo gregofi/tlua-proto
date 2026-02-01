@@ -24,3 +24,18 @@ TEST_CASE("should tokenize length operator") {
     REQUIRE(tokens[1].lexeme == "arr");
     REQUIRE(tokens[2].kind == TokenKind::Eof);
 }
+
+TEST_CASE("should tokenize bracket indexing") {
+    std::string source = "arr[1]";
+    auto tokens = Lexer::tokenize(source);
+    REQUIRE(tokens.size() == 5); // identifier, [, number, ], eof
+    REQUIRE(tokens[0].kind == TokenKind::Identifier);
+    REQUIRE(tokens[0].lexeme == "arr");
+    REQUIRE(tokens[1].kind == TokenKind::LBracket);
+    REQUIRE(tokens[1].lexeme == "[");
+    REQUIRE(tokens[2].kind == TokenKind::Number);
+    REQUIRE(tokens[2].lexeme == "1");
+    REQUIRE(tokens[3].kind == TokenKind::RBracket);
+    REQUIRE(tokens[3].lexeme == "]");
+    REQUIRE(tokens[4].kind == TokenKind::Eof);
+}

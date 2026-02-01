@@ -107,6 +107,13 @@ TEST_CASE("parse member access expressions") {
     REQUIRE_NOTHROW(parse("local value = foo().bar + 1"));
 }
 
+TEST_CASE("parse bracket indexing") {
+    REQUIRE_NOTHROW(parse("local value = arr[1]"));
+    REQUIRE_NOTHROW(parse("local value = arr[i]"));
+    REQUIRE_NOTHROW(parse("local value = arr[i + 1]"));
+    REQUIRE_NOTHROW(parse("local value = arr[1][2]"));
+}
+
 TEST_CASE("parse fibonacci program") {
     const std::string fibProgram = R"(
 function fib(n)

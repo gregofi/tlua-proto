@@ -120,18 +120,13 @@ void TypedAstPrinter::visit(BinOpExpr& expr) {
     result += ")";
 }
 
-void TypedAstPrinter::visit(MemberAccessExpr& expr) {
-    assert(expr.type != nullptr && "Type not inferred for MemberAccessExpr");
-    result += std::format("(get <{}> ", expr.type->toString());
+void TypedAstPrinter::visit(IndexExpr& expr) {
+    assert(expr.type != nullptr && "Type not inferred for IndexExpr");
+    result += std::format("([] <{}> ", expr.type->toString());
     expr.object->accept(*this);
-    result += std::format(" {})", expr.member_name);
-}
-
-void TypedAstPrinter::visit(MethodAccessExpr& expr) {
-    assert(expr.type != nullptr && "Type not inferred for MethodAccessExpr");
-    result += std::format("(method <{}> ", expr.type->toString());
-    expr.object->accept(*this);
-    result += std::format(" {})", expr.method_name);
+    result += " ";
+    expr.index->accept(*this);
+    result += ")";
 }
 
 void TypedAstPrinter::visit(FunCallExpr& expr) {

@@ -111,26 +111,14 @@ struct BinOpExpr : Expr {
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };
 
-struct MemberAccessExpr : Expr {
-    MemberAccessExpr(std::unique_ptr<Expr> obj, std::string member)
-        : object(std::move(obj)), member_name(std::move(member)) {}
+struct IndexExpr : Expr {
+    IndexExpr(std::unique_ptr<Expr> obj, std::unique_ptr<Expr> idx)
+        : object(std::move(obj)), index(std::move(idx)) {}
     std::unique_ptr<Expr> object;
-    std::string member_name;
+    std::unique_ptr<Expr> index;
 
     std::string toSExpr() const override {
-        return std::format("(. {} {})", object->toSExpr(), member_name);
-    }
-    void accept(Visitor& visitor) override { visitor.visit(*this); }
-};
-
-struct MethodAccessExpr : Expr {
-    MethodAccessExpr(std::unique_ptr<Expr> obj, std::string method)
-        : object(std::move(obj)), method_name(std::move(method)) {}
-    std::unique_ptr<Expr> object;
-    std::string method_name;
-
-    std::string toSExpr() const override {
-        return std::format("(: {} {})", object->toSExpr(), method_name);
+        return std::format("([] {} {})", object->toSExpr(), index->toSExpr());
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };

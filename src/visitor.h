@@ -9,8 +9,7 @@ struct TableExpr;
 struct VarExpr;
 struct UnaryOpExpr;
 struct BinOpExpr;
-struct MemberAccessExpr;
-struct MethodAccessExpr;
+struct IndexExpr;
 struct FunCallExpr;
 struct FunDecl;
 struct VarDecl;
@@ -34,8 +33,7 @@ class Visitor {
     virtual void visit(VarExpr& expr) = 0;
     virtual void visit(UnaryOpExpr& expr) = 0;
     virtual void visit(BinOpExpr& expr) = 0;
-    virtual void visit(MemberAccessExpr& expr) = 0;
-    virtual void visit(MethodAccessExpr& expr) = 0;
+    virtual void visit(IndexExpr& expr) = 0;
     virtual void visit(FunCallExpr& expr) = 0;
 
     // Statement visitors

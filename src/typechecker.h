@@ -29,8 +29,7 @@ class TypeChecker : public Visitor {
     void visit(VarExpr& expr) override;
     void visit(UnaryOpExpr& expr) override;
     void visit(BinOpExpr& expr) override;
-    void visit(MemberAccessExpr& expr) override;
-    void visit(MethodAccessExpr& expr) override;
+    void visit(IndexExpr& expr) override;
     void visit(FunCallExpr& expr) override;
 
     // Statement visitors

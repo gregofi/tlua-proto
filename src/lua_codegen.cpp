@@ -161,14 +161,11 @@ void LuaCodegen::visit(BinOpExpr& expr) {
     expr.right->accept(*this);
 }
 
-void LuaCodegen::visit(MemberAccessExpr& expr) {
+void LuaCodegen::visit(IndexExpr& expr) {
     expr.object->accept(*this);
-    result += std::format(".{}", expr.member_name);
-}
-
-void LuaCodegen::visit(MethodAccessExpr& expr) {
-    expr.object->accept(*this);
-    result += std::format(":{}", expr.method_name);
+    result += "[";
+    expr.index->accept(*this);
+    result += "]";
 }
 
 void LuaCodegen::visit(FunCallExpr& expr) {

@@ -68,6 +68,12 @@ Token Lexer::getNextToken() {
         case '}':
             advance();
             return tok(TokenKind::RBrace, "}");
+        case '[':
+            advance();
+            return tok(TokenKind::LBracket, "[");
+        case ']':
+            advance();
+            return tok(TokenKind::RBracket, "]");
         case ':':
             advance();
             return tok(TokenKind::MethodAccess, ":");

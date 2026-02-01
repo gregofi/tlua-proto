@@ -76,7 +76,8 @@ std::optional<int> Parser::prefixPrecedence(TokenKind kind) const {
 std::optional<int> Parser::postfixPrecedence(TokenKind kind) const {
     switch (kind) {
     case TokenKind::LParen:
-        return 80; // function call
+    case TokenKind::LBracket:
+        return 80; // function call and indexing
     default:
         return std::nullopt;
     }
@@ -162,6 +163,14 @@ std::unique_ptr<Expr> Parser::parsePostfixExpr(std::unique_ptr<Expr> lhs, TokenK
             throw errorExpectedTok("')' after function call arguments");
         }
         return std::make_unique<FunCallExpr>(std::move(lhs), std::move(args));
+    }
+    // bracket indexing
+    else if (match(TokenKind::LBracket)) {
+        auto index = parseExpr();
+        if (!match(TokenKind::RBracket)) {
+            throw errorExpectedTok("']' after index expression");
+        }
+        return std::make_unique<IndexExpr>(std::move(lhs), std::move(index));
     } else {
         throw errorExpectedTok("postfix operator");
     }

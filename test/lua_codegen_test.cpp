@@ -151,3 +151,21 @@ TEST_CASE("Codegen length on table literal") {
     std::string expected = "local len = #{1, 2}";
     REQUIRE(generate_lua(code) == expected);
 }
+
+TEST_CASE("Codegen array indexing") {
+    std::string code = "local arr = {1, 2, 3}\nlocal val = arr[1]";
+    std::string expected = "local arr = {1, 2, 3}\nlocal val = arr[1]";
+    REQUIRE(generate_lua(code) == expected);
+}
+
+TEST_CASE("Codegen nested array indexing") {
+    std::string code = "local val = arr[i][j]";
+    std::string expected = "local val = arr[i][j]";
+    REQUIRE(generate_lua(code) == expected);
+}
+
+TEST_CASE("Codegen table string indexing") {
+    std::string code = "local val = tbl[\"key\"]";
+    std::string expected = "local val = tbl[\"key\"]";
+    REQUIRE(generate_lua(code) == expected);
+}

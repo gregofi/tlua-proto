@@ -165,35 +165,41 @@ void TypeChecker::visit(BinOpExpr& expr) {
     }
 }
 
-void TypeChecker::visit(MemberAccessExpr& expr) {
+void TypeChecker::visit(IndexExpr& expr) {
     expr.object->accept(*this);
+    expr.index->accept(*this);
+
     Type* objType = expr.object->type;
 
-    // If the object type is any, result is any
+    // Any type propagates
     if (objType->getKind() == TypeKind::Any) {
         expr.type = TypeFactory::anyType();
         return;
     }
 
-    // For table types (records), look up the field
-    if (objType->getKind() == TypeKind::Table) {
-        auto* tableType = static_cast<TableType*>(objType);
-        auto it = tableType->getFields().find(expr.member_name);
-        if (it != tableType->getFields().end()) {
-            expr.type = it->second;
-            return;
+    // Array indexing: arr[number] -> element type
+    if (objType->getKind() == TypeKind::Array) {
+        if (!isNumber(expr.index->type) && !isAny(expr.index->type)) {
+            throw error(std::format("Type error: array index must be number, got {}",
+                                    expr.index->type->toString()));
         }
-        throw error(std::format("Type error: field '{}' does not exist on type {}",
-                                expr.member_name, objType->toString()));
+        auto* arrayType = static_cast<ArrayType*>(objType);
+        expr.type = arrayType->getElementType();
+        return;
     }
 
-    throw error(std::format("Type error: cannot access member '{}' on non-table type {}",
-                            expr.member_name, objType->toString()));
-}
+    // Table (record) indexing: return any for dynamic access
+    // This could be done better (compile-time evaluation), but
+    // for this prototype we keep it simple.
+    // We also want to be backward compatible with Lua, so by default
+    // we are not strict -> This behavior with any is required..
+    if (objType->getKind() == TypeKind::Table) {
+        expr.type = TypeFactory::anyType();
+        return;
+    }
 
-void TypeChecker::visit(MethodAccessExpr& expr) {
-    expr.object->accept(*this);
-    expr.type = TypeFactory::anyType();
+    throw error(
+        std::format("Type error: cannot index non-array/table type {}", objType->toString()));
 }
 
 void TypeChecker::visit(FunCallExpr& expr) {

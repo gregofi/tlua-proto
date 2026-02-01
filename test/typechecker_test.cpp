@@ -161,3 +161,50 @@ TEST_CASE("Length operator on record throws") {
     std::string code = "local obj = {x = 10}\nlocal len = #obj";
     REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
 }
+
+TEST_CASE("Array indexing returns element type") {
+    std::string code = "local arr = {1, 2, 3}\nlocal val = arr[1]";
+    std::string expected = R"(
+(var-decl arr (table (array 1 <number> 2 <number> 3 <number>) <number[]>))
+(var-decl val ([] <number> (var arr <number[]>) 1 <number>))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Array indexing with variable index") {
+    std::string code = "local arr = {1, 2, 3}\nlocal i = 1\nlocal val = arr[i]";
+    std::string expected = R"(
+(var-decl arr (table (array 1 <number> 2 <number> 3 <number>) <number[]>))
+(var-decl i 1 <number>)
+(var-decl val ([] <number> (var arr <number[]>) (var i <number>)))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Nested array indexing") {
+    std::string code = "local arr = {{1, 2}}\nlocal val = arr[1][2]";
+    std::string expected = R"(
+(var-decl arr (table (array (table (array 1 <number> 2 <number>) <number[]>)) <number[][]>))
+(var-decl val ([] <number> ([] <number[]> (var arr <number[][]>) 1 <number>) 2 <number>))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}
+
+TEST_CASE("Array indexing with non-number throws") {
+    std::string code = "local arr = {1, 2, 3}\nlocal val = arr[\"key\"]";
+    REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
+}
+
+TEST_CASE("Indexing non-array throws") {
+    std::string code = "local val = 42[1]";
+    REQUIRE_THROWS_AS(typecheck_and_print(code), TypeCheckError);
+}
+
+TEST_CASE("Table indexing returns any") {
+    std::string code = "local tbl = {x = 10}\nlocal val = tbl[\"x\"]";
+    std::string expected = R"(
+(var-decl tbl (table (map (x 10 <number>)) <{ x: number }>))
+(var-decl val ([] <any> (var tbl <{ x: number }>) 'x' <string>))
+)";
+    REQUIRE(normalize(typecheck_and_print(code)) == normalize(expected));
+}

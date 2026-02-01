@@ -27,6 +27,8 @@ enum class TokenKind {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
     Colon,
     Comma,
     Assign,
@@ -55,12 +57,12 @@ enum class TokenKind {
 
 inline const char* tokenKindToStr(TokenKind kind) {
     static const char* tokenKindToString[] = {
-        "Identifier", "Number",       "String",       "Nil",    "True",  "False",    "Local",
-        "Function",   "End",          "Return",       "If",     "Then",  "Else",     "ElseIf",
-        "LParen",     "RParen",       "LBrace",       "RBrace", "Colon", "Comma",    "Assign",
-        "Plus",       "Minus",        "Star",         "Slash",  "Equal", "NotEqual", "Less",
-        "Greater",    "LessEqual",    "GreaterEqual", "And",    "Or",    "Not",      "Length",
-        "Concat",     "MemberAccess", "MethodAccess", "Eof",
+        "Identifier", "Number", "String",  "Nil",          "True",         "False",    "Local",
+        "Function",   "End",    "Return",  "If",           "Then",         "Else",     "ElseIf",
+        "LParen",     "RParen", "LBrace",  "RBrace",       "LBracket",     "RBracket", "Colon",
+        "Comma",      "Assign", "Plus",    "Minus",        "Star",         "Slash",    "Equal",
+        "NotEqual",   "Less",   "Greater", "LessEqual",    "GreaterEqual", "And",      "Or",
+        "Not",        "Length", "Concat",  "MemberAccess", "MethodAccess", "Eof",
     };
 
     size_t size = sizeof(tokenKindToString) / sizeof(tokenKindToString[0]);
