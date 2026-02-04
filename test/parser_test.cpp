@@ -173,26 +173,26 @@ TEST_CASE("parse table expressions") {
 
 TEST_CASE("parse type annotations - variables") {
     auto prog = parse("local x: number = 42\n"
-                     "local s: string = \"hello\"\n");
-    
+                      "local s: string = \"hello\"\n");
+
     auto expected = R"(
 (var-decl x:number (number 42))
 (var-decl s:string (string "hello"))
 )";
-    
+
     std::string progSExpr;
     for (const auto& stmt : prog.statements) {
         progSExpr += stmt->toSExpr() + " ";
     }
-    
+
     REQUIRE(normalize(progSExpr) == normalize(expected));
-    
+
     // Also verify the type annotations structure
     auto* xDecl = dynamic_cast<VarDecl*>(prog.statements[0].get());
     REQUIRE(xDecl != nullptr);
     REQUIRE(xDecl->typeAnnotation.has_value());
     REQUIRE(xDecl->typeAnnotation->toString() == "number");
-    
+
     auto* sDecl = dynamic_cast<VarDecl*>(prog.statements[1].get());
     REQUIRE(sDecl != nullptr);
     REQUIRE(sDecl->typeAnnotation.has_value());
@@ -201,16 +201,16 @@ TEST_CASE("parse type annotations - variables") {
 
 TEST_CASE("parse type annotations - function with parameters and return type") {
     auto prog = parse("function add(x: number, y: number) -> number\n"
-                     "  return x + y\n"
-                     "end\n");
-    
+                      "  return x + y\n"
+                      "end\n");
+
     auto expected = R"(
 (fun global add -> number (x:number y:number)
     (block (return (Plus (var x) (var y)))))
 )";
-    
+
     REQUIRE(normalize(prog.statements.at(0)->toSExpr()) == normalize(expected));
-    
+
     // Also verify the type annotations are parsed
     auto* funDecl = dynamic_cast<FunDecl*>(prog.statements[0].get());
     REQUIRE(funDecl != nullptr);
@@ -222,4 +222,3 @@ TEST_CASE("parse type annotations - function with parameters and return type") {
     REQUIRE(funDecl->returnTypeAnnotation.has_value());
     REQUIRE(funDecl->returnTypeAnnotation->toString() == "number");
 }
-

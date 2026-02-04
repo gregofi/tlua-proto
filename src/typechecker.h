@@ -48,4 +48,7 @@ class TypeChecker : public Visitor {
     TypeCheckError error(const std::string& message) const { return TypeCheckError(message); }
     Type* resolveTypeAnnotation(const TypeAnnotation& annotation);
     Environment env;
+    // Holds current function return type for validating return statements.
+    // The caller is responsible for setting and restoring this value.
+    Type* currentFunctionReturnType = nullptr;
 };

@@ -13,12 +13,10 @@
 #include "visitor.h"
 
 // Helper for std::visit with overloaded lambdas
-template <class... Ts>
-struct overloaded : Ts... {
+template <class... Ts> struct overloaded : Ts... {
     using Ts::operator()...;
 };
-template <class... Ts>
-overloaded(Ts...) -> overloaded<Ts...>;
+template <class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 // Forward declaration
 class TypeAnnotation;
@@ -51,68 +49,66 @@ struct UnionTypeAnnotation {
 };
 
 class TypeAnnotation {
-    using Variant = std::variant<BasicTypeAnnotation, FunctionTypeAnnotation,
-                                  TableTypeAnnotation, ArrayTypeAnnotation, UnionTypeAnnotation>;
+    using Variant = std::variant<BasicTypeAnnotation, FunctionTypeAnnotation, TableTypeAnnotation,
+                                 ArrayTypeAnnotation, UnionTypeAnnotation>;
     Variant annotation;
 
-public:
-    template <typename T>
-    TypeAnnotation(T&& value) : annotation(std::forward<T>(value)) {}
+  public:
+    template <typename T> TypeAnnotation(T&& value) : annotation(std::forward<T>(value)) {}
 
     const Variant& getVariant() const { return annotation; }
 
     std::string toString() const {
-        return std::visit(
-            overloaded{
-                [](const BasicTypeAnnotation& arg) -> std::string {
-                    switch (arg.kind) {
-                    case BasicTypeAnnotation::Kind::Number:
-                        return "number";
-                    case BasicTypeAnnotation::Kind::String:
-                        return "string";
-                    case BasicTypeAnnotation::Kind::Boolean:
-                        return "boolean";
-                    case BasicTypeAnnotation::Kind::Nil:
-                        return "nil";
-                    }
-                    return "unknown";
-                },
-                [](const FunctionTypeAnnotation& arg) -> std::string {
-                    std::string result = "(";
-                    for (size_t i = 0; i < arg.paramTypes.size(); ++i) {
-                        if (i > 0)
-                            result += ", ";
-                        result += arg.paramTypes[i].toString();
-                    }
-                    result += ") -> ";
-                    result += arg.returnType ? arg.returnType->toString() : "void";
-                    return result;
-                },
-                [](const TableTypeAnnotation& arg) -> std::string {
-                    std::string result = "{";
-                    bool first = true;
-                    for (const auto& [field, type] : arg.fields) {
-                        if (!first)
-                            result += ", ";
-                        first = false;
-                        result += field + ": " + type.toString();
-                    }
-                    result += "}";
-                    return result;
-                },
-                [](const ArrayTypeAnnotation& arg) -> std::string {
-                    return arg.elementType->toString() + "[]";
-                },
-                [](const UnionTypeAnnotation& arg) -> std::string {
-                    std::string result;
-                    for (size_t i = 0; i < arg.types.size(); ++i) {
-                        if (i > 0)
-                            result += " | ";
-                        result += arg.types[i].toString();
-                    }
-                    return result;
-                }},
-            annotation);
+        return std::visit(overloaded{[](const BasicTypeAnnotation& arg) -> std::string {
+                                         switch (arg.kind) {
+                                         case BasicTypeAnnotation::Kind::Number:
+                                             return "number";
+                                         case BasicTypeAnnotation::Kind::String:
+                                             return "string";
+                                         case BasicTypeAnnotation::Kind::Boolean:
+                                             return "boolean";
+                                         case BasicTypeAnnotation::Kind::Nil:
+                                             return "nil";
+                                         }
+                                         return "unknown";
+                                     },
+                                     [](const FunctionTypeAnnotation& arg) -> std::string {
+                                         std::string result = "(";
+                                         for (size_t i = 0; i < arg.paramTypes.size(); ++i) {
+                                             if (i > 0)
+                                                 result += ", ";
+                                             result += arg.paramTypes[i].toString();
+                                         }
+                                         result += ") -> ";
+                                         result +=
+                                             arg.returnType ? arg.returnType->toString() : "void";
+                                         return result;
+                                     },
+                                     [](const TableTypeAnnotation& arg) -> std::string {
+                                         std::string result = "{";
+                                         bool first = true;
+                                         for (const auto& [field, type] : arg.fields) {
+                                             if (!first)
+                                                 result += ", ";
+                                             first = false;
+                                             result += field + ": " + type.toString();
+                                         }
+                                         result += "}";
+                                         return result;
+                                     },
+                                     [](const ArrayTypeAnnotation& arg) -> std::string {
+                                         return arg.elementType->toString() + "[]";
+                                     },
+                                     [](const UnionTypeAnnotation& arg) -> std::string {
+                                         std::string result;
+                                         for (size_t i = 0; i < arg.types.size(); ++i) {
+                                             if (i > 0)
+                                                 result += " | ";
+                                             result += arg.types[i].toString();
+                                         }
+                                         return result;
+                                     }},
+                          annotation);
     }
 };
 
@@ -272,7 +268,8 @@ struct FunDecl : Decl {
             std::vector<Parameter> params, std::unique_ptr<Stmt> body,
             std::optional<TypeAnnotation> retType = std::nullopt)
         : Decl{std::move(name), local}, thisName(std::move(thisName)), method(method),
-          params(std::move(params)), body(std::move(body)), returnTypeAnnotation(std::move(retType)) {}
+          params(std::move(params)), body(std::move(body)),
+          returnTypeAnnotation(std::move(retType)) {}
     // Fundecls may be methods:
     // function obj:method(params)
     // Also, they may be regular functions with dot notation:
@@ -295,11 +292,10 @@ struct FunDecl : Decl {
                                              }
                                              return acc + (acc.empty() ? "" : " ") + paramStr;
                                          });
-        std::string retTypeStr = returnTypeAnnotation.has_value() 
-                                    ? " -> " + returnTypeAnnotation->toString()
-                                    : "";
-        return std::format("(fun {} {}{} ({}) {})", local ? "local" : "global", name, 
-                           retTypeStr, paramsStr, body->toSExpr());
+        std::string retTypeStr =
+            returnTypeAnnotation.has_value() ? " -> " + returnTypeAnnotation->toString() : "";
+        return std::format("(fun {} {}{} ({}) {})", local ? "local" : "global", name, retTypeStr,
+                           paramsStr, body->toSExpr());
     }
     void accept(Visitor& visitor) override { visitor.visit(*this); }
 };

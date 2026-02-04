@@ -248,14 +248,14 @@ void TypeChecker::visit(FunDecl& stmt) {
             paramTypes.push_back(TypeFactory::anyType());
         }
     }
-    
+
     Type* returnType;
     if (stmt.returnTypeAnnotation.has_value()) {
         returnType = resolveTypeAnnotation(stmt.returnTypeAnnotation.value());
     } else {
         returnType = TypeFactory::anyType();
     }
-    
+
     Type* funcType = TypeFactory::instance().createFunctionType(paramTypes, returnType);
     stmt.type = funcType;
     env.define(stmt.name, funcType);
@@ -264,16 +264,29 @@ void TypeChecker::visit(FunDecl& stmt) {
     for (size_t i = 0; i < stmt.params.size(); ++i) {
         env.define(stmt.params[i].name, paramTypes[i]);
     }
+
+    // Track return type for validation
+    Type* previousReturnType = currentFunctionReturnType;
+    currentFunctionReturnType = returnType;
+
     stmt.body->accept(*this);
+
+    currentFunctionReturnType = previousReturnType;
     env.popScope();
 }
 
 void TypeChecker::visit(VarDecl& stmt) {
     stmt.initExpr->accept(*this);
-    
+
     if (stmt.typeAnnotation.has_value()) {
         Type* annotatedType = resolveTypeAnnotation(stmt.typeAnnotation.value());
-        // TODO: Check if init_expr type is compatible with annotated type
+
+        // Check if initializer type is compatible with annotated type
+        if (!isSubtype(stmt.initExpr->type, annotatedType)) {
+            throw error(std::format("Type mismatch: cannot assign {} to variable of type {}",
+                                    stmt.initExpr->type->toString(), annotatedType->toString()));
+        }
+
         stmt.type = annotatedType;
         env.define(stmt.name, annotatedType);
     } else {
@@ -300,6 +313,21 @@ void TypeChecker::visit(ReturnStmt& stmt) {
     for (auto& val : stmt.return_values) {
         val->accept(*this);
     }
+
+    // Validate return type if we're inside a function with a type annotation
+    if (currentFunctionReturnType != nullptr &&
+        currentFunctionReturnType->getKind() != TypeKind::Any) {
+
+        if (stmt.return_values.size() == 1) {
+            Type* returnedType = stmt.return_values[0]->type;
+            if (!isSubtype(returnedType, currentFunctionReturnType)) {
+                throw error(
+                    std::format("Type mismatch: function returns {} but declared to return {}",
+                                returnedType->toString(), currentFunctionReturnType->toString()));
+            }
+        }
+        // TODO: Handle multiple return values
+    }
 }
 
 void TypeChecker::visit(BlockStmt& stmt) {
@@ -319,35 +347,34 @@ void TypeChecker::visit(AssignStmt& stmt) {
 
 Type* TypeChecker::resolveTypeAnnotation(const TypeAnnotation& annotation) {
     return std::visit(
-        overloaded{
-            [](const BasicTypeAnnotation& basic) -> Type* {
-                switch (basic.kind) {
-                case BasicTypeAnnotation::Kind::Number:
-                    return BasicType::numberType();
-                case BasicTypeAnnotation::Kind::String:
-                    return BasicType::stringType();
-                case BasicTypeAnnotation::Kind::Boolean:
-                    return BasicType::booleanType();
-                case BasicTypeAnnotation::Kind::Nil:
-                    return BasicType::nilType();
-                }
-                return TypeFactory::unknownType();
-            },
-            [](const FunctionTypeAnnotation&) -> Type* {
-                // TODO: Implement function type annotations
-                throw TypeCheckError("Function type annotations not yet supported");
-            },
-            [](const TableTypeAnnotation&) -> Type* {
-                // TODO: Implement table type annotations
-                throw TypeCheckError("Table type annotations not yet supported");
-            },
-            [](const ArrayTypeAnnotation&) -> Type* {
-                // TODO: Implement array type annotations
-                throw TypeCheckError("Array type annotations not yet supported");
-            },
-            [](const UnionTypeAnnotation&) -> Type* {
-                // TODO: Implement union type annotations
-                throw TypeCheckError("Union type annotations not yet supported");
-            }},
+        overloaded{[](const BasicTypeAnnotation& basic) -> Type* {
+                       switch (basic.kind) {
+                       case BasicTypeAnnotation::Kind::Number:
+                           return BasicType::numberType();
+                       case BasicTypeAnnotation::Kind::String:
+                           return BasicType::stringType();
+                       case BasicTypeAnnotation::Kind::Boolean:
+                           return BasicType::booleanType();
+                       case BasicTypeAnnotation::Kind::Nil:
+                           return BasicType::nilType();
+                       }
+                       return TypeFactory::unknownType();
+                   },
+                   [](const FunctionTypeAnnotation&) -> Type* {
+                       // TODO: Implement function type annotations
+                       throw TypeCheckError("Function type annotations not yet supported");
+                   },
+                   [](const TableTypeAnnotation&) -> Type* {
+                       // TODO: Implement table type annotations
+                       throw TypeCheckError("Table type annotations not yet supported");
+                   },
+                   [](const ArrayTypeAnnotation&) -> Type* {
+                       // TODO: Implement array type annotations
+                       throw TypeCheckError("Array type annotations not yet supported");
+                   },
+                   [](const UnionTypeAnnotation&) -> Type* {
+                       // TODO: Implement union type annotations
+                       throw TypeCheckError("Union type annotations not yet supported");
+                   }},
         annotation.getVariant());
 }

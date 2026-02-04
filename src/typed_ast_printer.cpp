@@ -141,7 +141,8 @@ void TypedAstPrinter::visit(FunCallExpr& expr) {
 }
 
 void TypedAstPrinter::visit(FunDecl& stmt) {
-    result += "(fun " + stmt.name;
+    assert(stmt.type != nullptr && "Type not inferred for FunDecl");
+    result += std::format("(fun {} <{}>", stmt.name, stmt.type->toString());
     result += " (params";
     for (const auto& param : stmt.params) {
         result += " " + param.name;
@@ -152,7 +153,8 @@ void TypedAstPrinter::visit(FunDecl& stmt) {
 }
 
 void TypedAstPrinter::visit(VarDecl& stmt) {
-    result += "(var-decl " + stmt.name + " ";
+    assert(stmt.type != nullptr && "Type not inferred for VarDecl");
+    result += std::format("(var-decl {} <{}> ", stmt.name, stmt.type->toString());
     stmt.initExpr->accept(*this);
     result += ")";
 }
