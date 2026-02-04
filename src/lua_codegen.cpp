@@ -198,7 +198,7 @@ void LuaCodegen::visit(FunDecl& stmt) {
     result += "(";
     std::vector<std::string> params;
     std::transform(stmt.params.begin(), stmt.params.end(), std::back_inserter(params),
-                   [](auto&& param) { return param.toString(); });
+                   [](auto&& param) { return param.name; });
     result += join(params, ", ");
     result += ")";
     newline();

@@ -1,4 +1,4 @@
-function fib(n)
+function fib(n: number) -> number
     if n == 0 then
         return 0
     elseif n == 1 then
@@ -8,5 +8,5 @@ function fib(n)
     end
 end
 
-local result = fib(10)
+local result: number = fib(10)
 print(result)
